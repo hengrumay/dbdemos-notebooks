@@ -31,7 +31,7 @@
 -- MAGIC *To keep this demo simple, we will only implement a subste of the OMOP data model*
 -- MAGIC
 -- MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
--- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=01.1-DLT-patient-readmission-SQL&demo_name=lakehouse-patient-readmission&event=VIEW">
+-- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&org_id=1444828305810485&notebook=%2F01-Data-Ingestion%2F01.1-DLT-patient-readmission-SQL&demo_name=lakehouse-hls-readmission&event=VIEW&path=%2F_dbdemos%2Flakehouse%2Flakehouse-hls-readmission%2F01-Data-Ingestion%2F01.1-DLT-patient-readmission-SQL&version=1">
 
 -- COMMAND ----------
 
@@ -106,7 +106,7 @@
 -- MAGIC %md 
 -- MAGIC
 -- MAGIC
--- MAGIC The DLT pipeline was started for you! Click to <a dbdemos-pipeline-id="dlt-patient-readmission" href="#joblist/pipelines/ff2fd2cb-733b-4166-85ed-a34b84129a35" target="_blank">open your Pipeline</a> and review its execution.
+-- MAGIC The DLT pipeline was started for you! Click to <a dbdemos-pipeline-id="dlt-patient-readmission" href="#joblist/pipelines/a0a5135e-8cdd-4894-ae9b-e3a24cd8672e" target="_blank">open your Pipeline</a> and review its execution.
 
 -- COMMAND ----------
 
@@ -123,70 +123,35 @@
 
 -- COMMAND ----------
 
--- DBTITLE 1,original
--- -- Databricks Auto Loader cloud_files will incrementally load new files, infering the column types and handling schema evolution for us.
--- -- data could be from any source: csv, json, parquet...
--- CREATE OR REFRESH STREAMING LIVE TABLE encounters
---   AS SELECT * EXCEPT(START, STOP), to_timestamp(START) as START, to_timestamp(STOP) as STOP
---       FROM cloud_files("/Volumes/main__build/dbdemos_hls_readmission/synthea/landing_zone/encounters", "parquet", 
---                                 map("cloudFiles.inferColumnTypes", "true"));
-
--- CREATE OR REFRESH STREAMING LIVE TABLE patients
---   AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_hls_readmission/synthea/landing_zone/patients", "parquet", 
---                                 map("cloudFiles.inferColumnTypes", "true"));
-
--- CREATE OR REFRESH STREAMING LIVE TABLE conditions
---   AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_hls_readmission/synthea/landing_zone/conditions", "parquet", 
---                                 map("cloudFiles.inferColumnTypes", "true"));
-
--- CREATE OR REFRESH STREAMING LIVE TABLE medications
---   AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_hls_readmission/synthea/landing_zone/medications", "parquet", 
---                                 map("cloudFiles.inferColumnTypes", "true"));
-
--- CREATE OR REFRESH STREAMING LIVE TABLE immunizations
---   AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_hls_readmission/synthea/landing_zone/immunizations", "parquet", 
---                                 map("cloudFiles.inferColumnTypes", "true"));
-
--- CREATE OR REFRESH STREAMING LIVE TABLE concept
---   AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_hls_readmission/synthea/landing_vocab/CONCEPT", "parquet", 
---                                 map("cloudFiles.inferColumnTypes", "true"));
-
--- CREATE OR REFRESH STREAMING LIVE TABLE concept_relationship
---   AS SELECT * FROM cloud_files("/Volumes/main__build/dbdemos_hls_readmission/synthea/landing_vocab/CONCEPT_RELATIONSHIP", "parquet", 
---                                 map("cloudFiles.inferColumnTypes", "true"));
-
--- COMMAND ----------
-
--- DBTITLE 1,updated with catalog/db updates
 -- Databricks Auto Loader cloud_files will incrementally load new files, infering the column types and handling schema evolution for us.
 -- data could be from any source: csv, json, parquet...
 CREATE OR REFRESH STREAMING LIVE TABLE encounters
   AS SELECT * EXCEPT(START, STOP), to_timestamp(START) as START, to_timestamp(STOP) as STOP
-      FROM cloud_files("/Volumes/mmt_demos/hls_readmission_viarepo/synthea/landing_zone/encounters", "parquet", 
+      FROM cloud_files("/Volumes/mmt_demos/hls_readmission_dbdemoinit/synthea/landing_zone/encounters", "parquet", 
                                 map("cloudFiles.inferColumnTypes", "true"));
 
 CREATE OR REFRESH STREAMING LIVE TABLE patients
-  AS SELECT * FROM cloud_files("/Volumes/mmt_demos/hls_readmission_viarepo/synthea/landing_zone/patients", "parquet", 
+  AS SELECT * FROM cloud_files("/Volumes/mmt_demos/hls_readmission_dbdemoinit/synthea/landing_zone/patients", "parquet", 
                                 map("cloudFiles.inferColumnTypes", "true"));
 
 CREATE OR REFRESH STREAMING LIVE TABLE conditions
-  AS SELECT * FROM cloud_files("/Volumes/mmt_demos/hls_readmission_viarepo/synthea/landing_zone/conditions", "parquet", 
+  AS SELECT * FROM cloud_files("/Volumes/mmt_demos/hls_readmission_dbdemoinit/synthea/landing_zone/conditions", "parquet", 
                                 map("cloudFiles.inferColumnTypes", "true"));
 
 CREATE OR REFRESH STREAMING LIVE TABLE medications
-  AS SELECT * FROM cloud_files("/Volumes/mmt_demos/hls_readmission_viarepo/synthea/landing_zone/medications", "parquet", 
+  AS SELECT * FROM cloud_files("/Volumes/mmt_demos/hls_readmission_dbdemoinit/synthea/landing_zone/medications", "parquet", 
                                 map("cloudFiles.inferColumnTypes", "true"));
 
 CREATE OR REFRESH STREAMING LIVE TABLE immunizations
-  AS SELECT * FROM cloud_files("/Volumes/mmt_demos/hls_readmission_viarepo/synthea/landing_zone/immunizations", "parquet", 
+  AS SELECT * FROM cloud_files("/Volumes/mmt_demos/hls_readmission_dbdemoinit/synthea/landing_zone/immunizations", "parquet", 
                                 map("cloudFiles.inferColumnTypes", "true"));
 
 CREATE OR REFRESH STREAMING LIVE TABLE concept
-  AS SELECT * FROM cloud_files("/Volumes/mmt_demos/hls_readmission_viarepo/synthea/landing_vocab/CONCEPT", "parquet", 
+  AS SELECT * FROM cloud_files("/Volumes/mmt_demos/hls_readmission_dbdemoinit/synthea/landing_vocab/CONCEPT", "parquet", 
                                 map("cloudFiles.inferColumnTypes", "true"));
 
 CREATE OR REFRESH STREAMING LIVE TABLE concept_relationship
-  AS SELECT * FROM cloud_files("/Volumes/mmt_demos/hls_readmission_viarepo/synthea/landing_vocab/CONCEPT_RELATIONSHIP", "parquet", 
+  AS SELECT * FROM cloud_files("/Volumes/mmt_demos/hls_readmission_dbdemoinit/synthea/landing_vocab/CONCEPT_RELATIONSHIP", "parquet", 
                                 map("cloudFiles.inferColumnTypes", "true"));
 
 -- COMMAND ----------
@@ -740,7 +705,7 @@ CREATE OR REFRESH LIVE TABLE drug_exposure AS
 -- MAGIC
 -- MAGIC Now that these tables are available in our Lakehouse, let's review how we can share them with the Data Scientists and Data Analysts teams.
 -- MAGIC
--- MAGIC Open the <a dbdemos-pipeline-id="dlt-patient-readmission" href="#joblist/pipelines/ff2fd2cb-733b-4166-85ed-a34b84129a35" target="_blank">OMOP data model Delta Live Table pipeline</a> and click on start to visualize your lineage and consume the new data incrementally!
+-- MAGIC Open the <a dbdemos-pipeline-id="dlt-patient-readmission" href="#joblist/pipelines/a0a5135e-8cdd-4894-ae9b-e3a24cd8672e" target="_blank">OMOP data model Delta Live Table pipeline</a> and click on start to visualize your lineage and consume the new data incrementally!
 
 -- COMMAND ----------
 

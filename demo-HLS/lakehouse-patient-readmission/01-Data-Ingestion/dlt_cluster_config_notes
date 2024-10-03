@@ -1,0 +1,29 @@
+{
+    "pipeline_type": "WORKSPACE",
+    "clusters": [
+        {
+            "label": "default",
+            "autoscale": {
+                "min_workers": 1,
+                "max_workers": 5,
+                "mode": "ENHANCED"
+            }
+        }
+    ],
+    "development": true,
+    "continuous": false,
+    "channel": "PREVIEW",
+    "photon": false,
+    "libraries": [
+        {
+            "notebook": {
+                "path": "/Users/may.merkletan@databricks.com/REPOs/dbdemos-notebooks/demo-HLS/lakehouse-patient-readmission/01-Data-Ingestion/01.1-DLT-patient-readmission-SQL" ###
+            }
+        }
+    ],
+    "name": "dbdemos-hls-readmission_mmt_demos_hls_readmission_viarepo", ###
+    "serverless": false,
+    "edition": "ADVANCED",
+    "catalog": "mmt_demos", ###
+    "target": "hls_readmission_viarepo" ###
+}

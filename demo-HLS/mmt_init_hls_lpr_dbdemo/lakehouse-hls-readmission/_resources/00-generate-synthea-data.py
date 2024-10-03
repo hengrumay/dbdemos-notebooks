@@ -13,7 +13,7 @@
 # MAGIC Borrowed from: [hls-solution-accelerators](https://github.com/databricks/hls-solution-accelerators)
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
-# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=00-generate-synthea-data&demo_name=lakehouse-patient-readmission&event=VIEW">
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&org_id=1444828305810485&notebook=%2F_resources%2F00-generate-synthea-data&demo_name=lakehouse-hls-readmission&event=VIEW&path=%2F_dbdemos%2Flakehouse%2Flakehouse-hls-readmission%2F_resources%2F00-generate-synthea-data&version=1">
 
 # COMMAND ----------
 
@@ -21,14 +21,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ../../../_resources/00-global-setup-v2 # original repo path
-# MAGIC
-# MAGIC # %run ./00-global-setup-v2 # moved to _resources/
-
-# COMMAND ----------
-
-dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
-reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
+# MAGIC %run ./00-global-setup-v2
 
 # COMMAND ----------
 
@@ -42,10 +35,9 @@ synth_out = demo_data_folder+'/data'
 landing_data_folder = demo_data_folder+'/landing_zone'
 landing_data_folder_parquet = demo_data_folder+'/landing_zone_parquet'
 
-## commented out - mmt 2024Oct02
-# #Cleanup any existing folders
-# assert demo_data_folder.startswith("/Volume/") and len(demo_data_folder) > 20  #make sure we don't delete something outside of dbdemos
-# dbutils.fs.rm(demo_data_folder, True)
+#Cleanup any existing folders
+assert demo_data_folder.startswith("/Volume/") and len(demo_data_folder) > 20  #make sure we don't delete something outside of dbdemos
+dbutils.fs.rm(demo_data_folder, True)
 
 # COMMAND ----------
 

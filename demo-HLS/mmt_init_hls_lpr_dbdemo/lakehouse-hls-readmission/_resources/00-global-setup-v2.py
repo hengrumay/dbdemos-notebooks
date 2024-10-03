@@ -1,8 +1,4 @@
 # Databricks notebook source
-# dbutils.widgets.removeAll()
-
-# COMMAND ----------
-
 # MAGIC %md 
 # MAGIC
 # MAGIC # Technical Setup notebook. Hide this cell results
@@ -17,18 +13,6 @@ dbutils.widgets.text("min_dbr_version", "12.2", "Min required DBR version")
 
 # COMMAND ----------
 
-dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
-dbutils.widgets.text("min_dbr_version", "9.1", "Min required DBR version")
-#Empty value will try default: dbdemos with a fallback to hive_metastore
-#Specifying a value will not have fallback and fail if the catalog can't be used/created
-dbutils.widgets.text("catalog", "", "Catalog")
-#Empty value will be set to a database scoped to the current user using db_prefix
-dbutils.widgets.text("db", "", "Database")
-#ignored if db is set (we force the databse to the given value in this case)
-dbutils.widgets.text("db_prefix", "", "Database prefix")
-
-# COMMAND ----------
-
 import requests
 import collections
 import os
@@ -39,11 +23,8 @@ class DBDemos():
   def setup_schema(catalog, db, reset_all_data, volume_name = None):
     if reset_all_data:
       print(f'clearing up volume named `{catalog}`.`{db}`.`{volume_name}`')
-      try:
-        spark.sql(f"DROP VOLUME IF EXISTS `{catalog}`.`{db}`.`{volume_name}`")
-        spark.sql(f"DROP SCHEMA IF EXISTS `{catalog}`.`{db}` CASCADE")
-      except Exception as e:
-        print(f'catalog `{catalog}` or schema `{db}` do not exist.  Skipping data reset')
+      spark.sql(f"DROP VOLUME IF EXISTS `{catalog}`.`{db}`.`{volume_name}`")
+      spark.sql(f"DROP SCHEMA IF EXISTS `{catalog}`.`{db}` CASCADE")
 
     def use_and_create_db(catalog, dbName, cloud_storage_path = None):
       print(f"USE CATALOG `{catalog}`")
@@ -260,7 +241,3 @@ class DBDemos():
 #Let's skip some warnings for cleaner output
 import warnings
 warnings.filterwarnings("ignore")
-
-# COMMAND ----------
-
-

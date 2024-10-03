@@ -1,11 +1,5 @@
 # Databricks notebook source
-# DBTITLE 1,update config as needed
 # MAGIC %run ../config
-
-# COMMAND ----------
-
-# DBTITLE 1,check
-catalog, db ,volume_name
 
 # COMMAND ----------
 
@@ -14,16 +8,12 @@ reset_all_data = dbutils.widgets.get("reset_all_data") == "true"
 
 # COMMAND ----------
 
-# MAGIC %run ../../../_resources/00-global-setup-v2 
+# MAGIC %run ./00-global-setup-v2
 
 # COMMAND ----------
 
 DBDemos.setup_schema(catalog, db, reset_all_data, volume_name)
 volume_folder =  f"/Volumes/{catalog}/{db}/{volume_name}"
-
-# COMMAND ----------
-
-volume_folder
 
 # COMMAND ----------
 
@@ -79,8 +69,4 @@ def drop_fs_table(table_name):
     spark.sql(f"DROP TABLE IF EXISTS `{table_name}`")
   except Exception as e:
     print(f"Can't drop the delta table, probably doesn't exist? {e}")
-
-
-# COMMAND ----------
-
 

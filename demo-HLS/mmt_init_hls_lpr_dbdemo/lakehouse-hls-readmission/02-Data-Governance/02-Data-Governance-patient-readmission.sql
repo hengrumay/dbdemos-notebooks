@@ -11,7 +11,7 @@
 -- MAGIC This is made easy with Databricks Unity Catalog.
 -- MAGIC
 -- MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
--- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&notebook=02-Data-Governance-patient-readmission&demo_name=lakehouse-patient-readmission&event=VIEW">
+-- MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&org_id=1444828305810485&notebook=%2F02-Data-Governance%2F02-Data-Governance-patient-readmission&demo_name=lakehouse-hls-readmission&event=VIEW&path=%2F_dbdemos%2Flakehouse%2Flakehouse-hls-readmission%2F02-Data-Governance%2F02-Data-Governance-patient-readmission&version=1">
 
 -- COMMAND ----------
 
@@ -68,11 +68,8 @@ GRANT SELECT ON TABLE drug_exposure TO `analysts`;
 GRANT SELECT ON TABLE condition_occurrence TO `analysts`;
 GRANT SELECT ON TABLE patients TO `analysts`;
 
-
 -- We'll grant an extra MODIFY to our Data Engineer
--- GRANT SELECT, MODIFY ON SCHEMA dbdemos_hls_readmission TO `dataengineers`; ## original
-
- GRANT SELECT, MODIFY ON SCHEMA hls_readmission_viarepo TO `dataengineers`;
+GRANT SELECT, MODIFY ON SCHEMA dbdemos_hls_readmission TO `dataengineers`;
 
 -- COMMAND ----------
 
@@ -110,6 +107,42 @@ SELECT * FROM patients
 
 -- COMMAND ----------
 
+-- ## From previous version -- azure link https://adb-830292400663869.9.azuredatabricks.net/?o=830292400663869#notebook/2919862720218566/command/2919862720218586
+
+-- COMMAND ----------
+
+SELECT * FROM patients;
+
+-- COMMAND ----------
+
+-- Create a function to mask data
+CREATE OR REPLACE FUNCTION simple_mask(column_value STRING)
+RETURNS STRING
+RETURN IF(is_account_group_member('hls_admin'), column_value, '****');
+
+-- Create a view to mask PII information
+CREATE OR REPLACE VIEW masked_patients AS
+SELECT
+  simple_mask(FIRST) AS FIRST,
+  simple_mask(LAST) AS LAST,
+  simple_mask(PASSPORT) AS PASSPORT,
+  simple_mask(DRIVERS) AS DRIVERS,
+  simple_mask(SSN) AS SSN,
+  simple_mask(ADDRESS) AS ADDRESS,
+  -- Include other columns as needed
+  -- other_column1,
+  -- other_column2,
+  BIRTHDATE,
+  BIRTHPLACE,
+  CITY,
+  COUNTY
+FROM patients;
+
+-- Query the view
+SELECT * FROM masked_patients;
+
+-- COMMAND ----------
+
 -- MAGIC %md
 -- MAGIC
 -- MAGIC ## Step 3. (Data and assets) Lineage
@@ -137,19 +170,48 @@ SELECT * FROM patients
 
 -- COMMAND ----------
 
--- DBTITLE 1,Create a Delta Sharing Share
-CREATE SHARE IF NOT EXISTS dbdemos_patient_readmission_visits 
-  COMMENT 'Sharing the Customer Gold table from the Credit Decisioning Demo.';
+-- DBTITLE 1,Create a Delta Sharing Share (original)
+-- CREATE SHARE IF NOT EXISTS dbdemos_patient_readmission_visits 
+--   COMMENT 'Sharing patients table from the hls_readmissions Demo.';
  
--- For the demo we'll grant ownership to all users. Typical deployments wouls have admin groups or similar.
-ALTER SHARE dbdemos_patient_readmission_visits OWNER TO `account users`;
+-- -- For the demo we'll grant ownership to all users. Typical deployments wouls have admin groups or similar.
+-- ALTER SHARE dbdemos_patient_readmission_visits OWNER TO `account users`;
 
--- Simply add the tables you want to share to your SHARE:
--- ALTER SHARE dbdemos_patient_readmission_visits  ADD TABLE patients ;
+-- -- Simply add the tables you want to share to your SHARE:
+-- -- ALTER SHARE dbdemos_patient_readmission_visits  ADD TABLE patients ;
+
+-- -- DESCRIBE SHARE dbdemos_patient_readmission_visits;
 
 -- COMMAND ----------
 
-DESCRIBE SHARE dbdemos_patient_readmission_visits;
+-- DBTITLE 1,Create a Delta Sharing Share
+
+-- Grant USE CATALOG privilege to the user
+GRANT USE CATALOG ON CATALOG mmt_demos TO `account users`;
+
+-- Grant USE SCHEMA privilege to the user
+GRANT USE SCHEMA ON SCHEMA mmt_demos.hls_readmission_dbdemoinit TO `account users`;
+
+-- Grant SELECT privilege on the table to the user
+GRANT SELECT ON TABLE mmt_demos.hls_readmission_dbdemoinit.patients TO `account users`;
+
+-- Create the share if it does not exist
+CREATE SHARE IF NOT EXISTS mmt_dbdemos_hls_readmission_dbdemoinit_share 
+  COMMENT 'Sharing patients table from the hls_readmission_dbdemoinit Demo.';
+
+-- Grant ownership to all users
+ALTER SHARE mmt_dbdemos_hls_readmission_dbdemoinit_share OWNER TO `account users`;
+
+-- Add the table to the share
+ALTER SHARE mmt_dbdemos_hls_readmission_dbdemoinit_share ADD TABLE mmt_demos.hls_readmission_dbdemoinit.patients;
+
+-- COMMAND ----------
+
+DESCRIBE SHARE mmt_dbdemos_hls_readmission_dbdemoinit_share;
+
+-- COMMAND ----------
+
+-- https://e2-demo-field-eng.cloud.databricks.com/explore/sharing/shares/mmt_dbdemos_hls_readmission_dbdemoinit_share?o=1444828305810485
 
 -- COMMAND ----------
 
