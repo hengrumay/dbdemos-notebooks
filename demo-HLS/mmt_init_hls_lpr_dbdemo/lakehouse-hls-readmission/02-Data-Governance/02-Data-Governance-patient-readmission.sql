@@ -62,6 +62,7 @@ SHOW TABLES;
 
 -- COMMAND ----------
 
+-- DBTITLE 1,original
 -- Let's grant our ANALYSTS a SELECT permission:
 -- Note: make sure you created an analysts and dataengineers group first.
 GRANT SELECT ON TABLE drug_exposure TO `analysts`;
@@ -69,7 +70,8 @@ GRANT SELECT ON TABLE condition_occurrence TO `analysts`;
 GRANT SELECT ON TABLE patients TO `analysts`;
 
 -- We'll grant an extra MODIFY to our Data Engineer
-GRANT SELECT, MODIFY ON SCHEMA dbdemos_hls_readmission TO `dataengineers`;
+-- GRANT SELECT, MODIFY ON SCHEMA dbdemos_hls_readmission TO `dataengineers`;
+GRANT SELECT, MODIFY ON SCHEMA hls_readmission_dbdemoinit TO `dataengineers`;
 
 -- COMMAND ----------
 
@@ -81,6 +83,19 @@ GRANT SELECT, MODIFY ON SCHEMA dbdemos_hls_readmission TO `dataengineers`;
 
 -- COMMAND ----------
 
+-- DBTITLE 1,show table `patients`
+SELECT * FROM patients;
+
+-- COMMAND ----------
+
+-- DBTITLE 0,notes
+-- MAGIC %md
+-- MAGIC ##### Create a simple_mask function using SQL to help
+-- MAGIC <!-- ## From previous version -- azure link https://adb-830292400663869.9.azuredatabricks.net/?o=830292400663869#notebook/2919862720218566/command/2919862720218586 -->
+
+-- COMMAND ----------
+
+-- DBTITLE 0,orignal code
 -- hls_admin group will have access to all data, all other users will see a masked information.
 CREATE OR REPLACE FUNCTION simple_mask(column_value STRING)
    RETURN IF(is_account_group_member('hls_admin'), column_value, "****");
@@ -101,20 +116,13 @@ SELECT * FROM patients
 
 -- COMMAND ----------
 
--- MAGIC %md
--- MAGIC
--- MAGIC As we can observe from the cells above, the ```first_name``` column is masked whenever the current user requesting the data is part of the ```data-science-users``` group, and not masked if other type of users queries the data.
+select * FROM patients as, 
+-- ##
+mask_pii_patients
 
 -- COMMAND ----------
 
--- ## From previous version -- azure link https://adb-830292400663869.9.azuredatabricks.net/?o=830292400663869#notebook/2919862720218566/command/2919862720218586
-
--- COMMAND ----------
-
-SELECT * FROM patients;
-
--- COMMAND ----------
-
+-- DBTITLE 1,SQL functions
 -- Create a function to mask data
 CREATE OR REPLACE FUNCTION simple_mask(column_value STRING)
 RETURNS STRING
@@ -140,6 +148,60 @@ FROM patients;
 
 -- Query the view
 SELECT * FROM masked_patients;
+
+-- COMMAND ----------
+
+-- MAGIC %md
+-- MAGIC
+-- MAGIC As we can observe from the cells above, the ```first_name``` column is masked whenever the current user requesting the data is part of the ```data-science-users``` group, and not masked if other type of users queries the data.
+
+-- COMMAND ----------
+
+-- DBTITLE 1,using pyspark.sql
+-- MAGIC %python
+-- MAGIC from pyspark.sql.functions import expr
+-- MAGIC
+-- MAGIC df = spark.table('patients')
+-- MAGIC display(df)
+-- MAGIC
+-- MAGIC # Assuming `df` is your streaming DataFrame
+-- MAGIC masked_df = df.withColumn("FIRST", expr("IF(is_account_group_member('hls_admin'), FIRST, '****')")) \
+-- MAGIC               .withColumn("LAST", expr("IF(is_account_group_member('hls_admin'), LAST, '****')")) \
+-- MAGIC               .withColumn("PASSPORT", expr("IF(is_account_group_member('hls_admin'), PASSPORT, '****')")) \
+-- MAGIC               .withColumn("DRIVERS", expr("IF(is_account_group_member('hls_admin'), DRIVERS, '****')")) \
+-- MAGIC               .withColumn("SSN", expr("IF(is_account_group_member('hls_admin'), SSN, '****')")) \
+-- MAGIC               .withColumn("ADDRESS", expr("IF(is_account_group_member('hls_admin'), ADDRESS, '****')"))
+-- MAGIC
+-- MAGIC display(masked_df)
+
+-- COMMAND ----------
+
+-- DBTITLE 0,using pyspark.sql
+-- %python
+-- # from pyspark.sql.functions import col, lit, when
+-- from pyspark.sql import functions as F, types as T
+
+
+-- # Modified function to mask column without checking `is_hls_admin`
+-- def mask_column(column_name):
+--     return F.lit("****").alias(column_name)
+
+-- # # Register the UDF
+-- # mask_column_udf = F.udf(mask_column, T.StringType())
+
+-- df = spark.table('patients')
+-- display(df)
+
+
+-- # Apply the modified function
+-- masked_df = df.withColumn("FIRST", mask_column("FIRST")) \
+--               .withColumn("LAST", mask_column("LAST")) \
+--               .withColumn("PASSPORT", mask_column("PASSPORT")) \
+--               .withColumn("DRIVERS", mask_column("DRIVERS")) \
+--               .withColumn("SSN", mask_column("SSN")) \
+--               .withColumn("ADDRESS", mask_column("ADDRESS"))
+
+-- display(masked_df)
 
 -- COMMAND ----------
 

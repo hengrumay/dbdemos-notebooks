@@ -58,7 +58,7 @@ display(labels)
 # MAGIC
 # MAGIC Being able to save our features in dedicated feature store simplify data management cross teamn, allowing features to be shared but also used in real-time leveraging realtime feature serving (automatically backed by ELTP databases).
 # MAGIC
-# MAGIC To keep this notebook simple, we won't be using the Feature store. If you are interested, open the [03.6-Feature-Store-ML-patient-readmission](/advanced-feature-store/03.6-Feature-Store-ML-patient-readmission) for a complete example.
+# MAGIC To keep this notebook simple, we won't be using the Feature store. If you are interested, open the [04.6-EXTRA-Feature-Store-ML-patient-readmission]($./04.6-EXTRA-Feature-Store-ML-patient-readmission) for a complete example.
 
 # COMMAND ----------
 

@@ -35,7 +35,8 @@ dataset_to_explain.display()
 mlflow.set_registry_uri('databricks-uc')
 client = mlflow.tracking.MlflowClient()
 
-model = mlflow.pyfunc.load_model(model_uri=f"models:/{catalog}.{db}.dbdemos_hls_patient_readmission@prod")
+# model = mlflow.pyfunc.load_model(model_uri=f"models:/{catalog}.{db}.dbdemos_hls_patient_readmission@prod")
+model = mlflow.pyfunc.load_model(model_uri=f"models:/{catalog}.{db}.dbdemos_hls_pr@prod")
 features = model.metadata.get_input_schema().input_names()
 
 # COMMAND ----------
@@ -49,7 +50,9 @@ features = model.metadata.get_input_schema().input_names()
 # MAGIC - To reduce the computational overhead of each trial, a single example is sampled from the cohort to explain.<br />
 # MAGIC   For more thorough results, increase the sample size of explanations, or provide your own examples to explain.
 # MAGIC
-# MAGIC For more information on how to read Shapley values, see the [SHAP documentation](https://shap.readthedocs.io/en/latest/example_notebooks/overviews/An%20introduction%20to%20explainable%20AI%20with%20Shapley%20values.html).
+# MAGIC For more information on how to read Shapley values, see the [SHAP documentation](https://shap.readthedocs.io/en/latest/example_notebooks/overviews/An%20introduction%20to%20explainable%20AI%20with%20Shapley%20values.html) and the related [Databricks Blog](https://www.databricks.com/blog/2022/02/02/scaling-shap-calculations-with-pyspark-and-pandas-udf.html)
+# MAGIC
+# MAGIC
 
 # COMMAND ----------
 
@@ -88,13 +91,47 @@ shap.summary_plot(shap_values, train_sample)
 
 # COMMAND ----------
 
+# shap.initjs() 
+
+# COMMAND ----------
+
 # DBTITLE 1,Explain risk for an individual
 #We'll need to add shap bundle js to display nice graph
 with open(shap.__file__[:shap.__file__.rfind('/')]+"/plots/resources/bundle.js", 'r') as file:
+   # print(file.read())
    shap_bundle_js = '<script type="text/javascript">'+file.read()+'</script>'
 
 html = shap.force_plot(explainer.expected_value, shap_values[0,:], train_sample.iloc[0,:])
+
 displayHTML(shap_bundle_js + html.html())
+
+# COMMAND ----------
+
+html
+
+# COMMAND ----------
+
+# ref: 
+# - https://github.com/shap/shap/issues/101
+# - https://github.com/interpretable-ml/iml/blob/master/iml/visualizers.py
+
+# COMMAND ----------
+
+# DBTITLE 1,to download iml-bundle.js and change src path
+# html = shap.force_plot(shap_values_test[i, :], ex)
+html_js = '<script type="text/javascript" src="https://jvlanalytics.nl/assets/iml-bundle.js" charset="utf-8"></script>'
+displayHTML(html_js + str(html.data))
+
+# COMMAND ----------
+
+from IPython.core.display import HTML
+
+display(HTML(str(html.data)))
+
+# COMMAND ----------
+
+# DBTITLE 1,to-do/updates
+# https://shap.readthedocs.io/en/latest/example_notebooks/overviews/An%20introduction%20to%20explainable%20AI%20with%20Shapley%20values.html
 
 # COMMAND ----------
 
@@ -120,23 +157,61 @@ shap.dependence_plot("INCOME", shap_values, train_sample[features], interaction_
 
 # COMMAND ----------
 
-# MAGIC %md #### Computing SHAP values on the entier dataset:
+# MAGIC %md #### Computing SHAP values on the entire dataset:
 # MAGIC These graph are great to understand the model against a subset of data. If we want to to further analyze based on the shap values on millions on rows, we can use spark to compute the shap values.
+# MAGIC
+# MAGIC ref: https://www.databricks.com/blog/2022/02/02/scaling-shap-calculations-with-pyspark-and-pandas-udf.html
 # MAGIC
 # MAGIC We can use spark 3 `mapInPandas` function, or create a `@pandas_udf`:
 # MAGIC
 
 # COMMAND ----------
 
-import pandas as pd
-def compute_shap_values(iterator):
-  for X in iterator:
-    yield pd.DataFrame(explainer.shap_values(X, check_additivity=False))
+# DBTITLE 1,original
+# import pandas as pd
+# def compute_shap_values(iterator):
+#   for X in iterator:
+#     yield pd.DataFrame(explainer.shap_values(X, check_additivity=False))
 
-df = dataset_to_explain.mapInPandas(compute_shap_values, schema=", ".join([x+"_shap_value float" for x in features]))
+# df = dataset_to_explain.mapInPandas(compute_shap_values, schema=", ".join([x+"_shap_value float" for x in features]))
 
-# Skip as this can take some time to run
-#display(df)
+# # Skip as this can take some time to run
+# # display(df)
+
+# COMMAND ----------
+
+# DBTITLE 1,to-test
+# def calculate_shap(iterator: Iterator[pd.DataFrame]) -> Iterator[pd.DataFrame]:
+#     for X in iterator:
+#         yield pd.DataFrame(
+#             explainer.shap_values(np.array(X), check_additivity=False)[0],
+#             columns=columns_for_shap_calculation,
+#         )
+
+# return_schema = StructType()
+# for feature in columns_for_shap_calculation:
+#     return_schema = return_schema.add(StructField(feature, FloatType()))
+
+# shap_values = df.mapInPandas(calculate_shap, schema=return_schema)
+
+# COMMAND ----------
+
+# from pyspark.sql.functions import col
+
+# # Assuming compute_shap_values is correctly defined and 'features' is a list of column names
+# selected_columns = [col(feature) for feature in features]
+# schema = ", ".join([f"{x}_shap_value float" for x in features])
+
+# # Corrected code
+# display(dataset_to_explain.limit(10).select(*selected_columns).mapInPandas(compute_shap_values, schema=schema))
+
+# COMMAND ----------
+
+display(dataset_to_explain)
+
+# COMMAND ----------
+
+features
 
 # COMMAND ----------
 

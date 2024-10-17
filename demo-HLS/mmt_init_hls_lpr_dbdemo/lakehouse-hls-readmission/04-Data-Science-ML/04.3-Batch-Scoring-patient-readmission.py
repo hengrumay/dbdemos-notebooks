@@ -46,6 +46,7 @@ model_name = "dbdemos_hls_pr"
 
 # Load model as a Spark UDF.
 # loaded_model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.dbdemos_hls_patient_readmission@prod", result_type='double')
+
 loaded_model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.{model_name}@prod", result_type='double')
 
 # COMMAND ----------

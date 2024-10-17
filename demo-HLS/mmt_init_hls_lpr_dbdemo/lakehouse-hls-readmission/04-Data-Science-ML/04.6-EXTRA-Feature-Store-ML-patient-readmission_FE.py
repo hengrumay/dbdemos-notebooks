@@ -76,20 +76,30 @@ pat_features_df.display()
 
 # COMMAND ----------
 
+# DBTITLE 1,to-update!
+## this needs to be updated with feature.engineering 
+# https://docs.databricks.com/en/machine-learning/feature-store/uc/feature-tables-uc.html#language-Python
+
+# from databricks.feature_engineering import FeatureEngineeringClient ## might need to check/update the configs
+# fe = FeatureEngineeringClient()
+
+# COMMAND ----------
+
 # DBTITLE 1,Patient Feature Table
-# Instantiate the Feature Store Client
-fs = feature_store.FeatureStoreClient()
+# Instantiate the Feature Store using the Feature Engineering Client
+from databricks.feature_engineering import FeatureEngineeringClient ## might need to check/update the configs
+fe = FeatureEngineeringClient()
 
 drop_fs_table(f'{dbName}.pat_features')
 
-pat_feature_table = fs.create_table(
+pat_feature_table = fe.create_table(
   name=f'{dbName}.pat_features',
   primary_keys=['Id'],
   df=pat_features_df,
   description='Base Features from the Patient Table'
 )
 
-fs.write_table(df=pat_features_df, name=f'{dbName}.pat_features', mode='overwrite')
+fe.write_table(df=pat_features_df, name=f'{dbName}.pat_features', mode='merge')
 
 # COMMAND ----------
 
@@ -133,14 +143,16 @@ enc_features_df = compute_enc_features(spark.table('encounters'))
 drop_fs_table(f'{dbName}.enc_features')
 
 #Note: You might need to delete the FS table using the UI
-enc_feature_table = fs.create_table(
+
+enc_feature_table = fe.create_table(  
   name=f'{dbName}.enc_features',
   primary_keys=['ENCOUNTER_ID'],
   df=enc_features_df,
   description='Base and derived features from the Encounter Table'
 )
 
-fs.write_table(df=enc_features_df, name=f'{dbName}.enc_features', mode='overwrite')
+fe.write_table(df=enc_features_df, name=f'{dbName}.enc_features', mode='merge')
+
 
 # COMMAND ----------
 
@@ -172,14 +184,14 @@ aae_features_df = compute_age_at_enc(spark.table('encounters'), spark.table('pat
 drop_fs_table(f'{dbName}.age_at_enc_features')
 
 #Note: You might need to delete the FS table using the UI
-aae_feature_table = fs.create_table(
+aae_feature_table = fe.create_table( 
   name=f'{dbName}.age_at_enc_features',
   primary_keys=['encounter_id'],
   df=aae_features_df,
   description='determine the age of the patient at the time of the encounter'
 )
 
-fs.write_table(df=aae_features_df, name=f'{dbName}.age_at_enc_features', mode='overwrite')
+fe.write_table(df=aae_features_df, name=f'{dbName}.age_at_enc_features', mode='merge')
 
 # COMMAND ----------
 
@@ -207,11 +219,16 @@ display(labels)
 
 # COMMAND ----------
 
+dbName
+
+# COMMAND ----------
+
 # DBTITLE 1,Feature lookups
-from databricks.feature_store import FeatureLookup
+from databricks.feature_engineering import FeatureLookup
+
 patient_feature_lookups = [
    FeatureLookup( 
-     table_name = f'{dbName}.pat_features',
+     table_name = f'{catalog}.{dbName}.pat_features',
      feature_names = [
       'MARITAL_M',
       'MARITAL_S',
@@ -231,7 +248,7 @@ patient_feature_lookups = [
  
 encounter_feature_lookups = [
    FeatureLookup( 
-     table_name = f'{dbName}.enc_features',
+     table_name = f'{catalog}.{dbName}.enc_features',
      feature_names = ['BASE_ENCOUNTER_COST', 'TOTAL_CLAIM_COST', 'PAYER_COVERAGE', 'enc_length', 'ENCOUNTERCLASS_ambulatory', 'ENCOUNTERCLASS_emergency', 'ENCOUNTERCLASS_hospice', 'ENCOUNTERCLASS_inpatient', 'ENCOUNTERCLASS_outpatient', 'ENCOUNTERCLASS_wellness',],
      lookup_key = ["Id"]
    )
@@ -239,7 +256,7 @@ encounter_feature_lookups = [
 
 age_at_enc_feature_lookups = [
    FeatureLookup( 
-     table_name = f'{dbName}.age_at_enc_features',
+     table_name = f'{catalog}.{dbName}.age_at_enc_features',
      feature_names = ['age_at_encounter'],
      lookup_key = ["Id"]
    )
@@ -252,33 +269,37 @@ age_at_enc_feature_lookups = [
 
 # COMMAND ----------
 
-fs = feature_store.FeatureStoreClient()
-training_set = fs.create_training_set(
-  labels,
-  feature_lookups = patient_feature_lookups + encounter_feature_lookups + age_at_enc_feature_lookups,
-  label = "30_DAY_READMISSION",
-  exclude_columns = ['START', 'STOP']
+from databricks.feature_engineering import FeatureEngineeringClient
+
+# Instantiate the FeatureEngineeringClient
+fe_client = FeatureEngineeringClient()
+
+# Assuming 'labels' is a DataFrame and you have defined 'patient_feature_lookups', 'encounter_feature_lookups', and 'age_at_enc_feature_lookups' earlier
+training_set = fe_client.create_training_set(
+  df=labels,  # Pass the DataFrame as 'df'
+  feature_lookups=patient_feature_lookups + encounter_feature_lookups + age_at_enc_feature_lookups,
+  label="30_DAY_READMISSION",
+  exclude_columns=['START', 'STOP']
 )
 
 training_df = training_set.load_df()
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC ## Congrats! our training dataset is ready, retreiving features from our Feature Tables.
-# MAGIC
-# MAGIC We now continue our ML steps such as calling AutoML with the training Dataset.
-# MAGIC
-# MAGIC For more details on Databricks Feature Store and more advanced capabilities (Online Store for realtime lookup, streaming updates, timeseries processing...), install the feature store demo: `dbdemos.install('feature-store')` 
+# DBTITLE 1,feature_names
+feature_names = ['MARITAL_M', 'MARITAL_S', 'RACE_asian', 'RACE_black', 'RACE_hawaiian', 'RACE_other', 'RACE_white',
+                 'ETHNICITY_hispanic', 'ETHNICITY_nonhispanic', 'GENDER_F', 'GENDER_M', 'INCOME'] \
+              + ['BASE_ENCOUNTER_COST', 'TOTAL_CLAIM_COST', 'PAYER_COVERAGE', 'enc_length', 'ENCOUNTERCLASS_ambulatory', 'ENCOUNTERCLASS_emergency', 'ENCOUNTERCLASS_hospice', 'ENCOUNTERCLASS_inpatient', 'ENCOUNTERCLASS_outpatient', 'ENCOUNTERCLASS_wellness'] \
+              + ['age_at_encounter'] \
+              + ['30_DAY_READMISSION']
 
 # COMMAND ----------
 
 # DBTITLE 1,Running our model training from the feature store training set with automl
 from databricks import automl
-#summary = automl.classify(training_dataset.select(feature_names), target_col="30_DAY_READMISSION", primary_metric="roc_auc", timeout_minutes=6)
+summary = automl.classify(training_df.select(feature_names), target_col="30_DAY_READMISSION", primary_metric="roc_auc", timeout_minutes=20)
 # ...
 # See 04.2-AutoML-patient-admission-risk for more details on how to deploy the AutoML model.
-
 
 # COMMAND ----------
 

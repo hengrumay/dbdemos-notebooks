@@ -11,7 +11,14 @@ import dbdemos
 
 # COMMAND ----------
 
-dbdemos.install('lakehouse-hls-readmission', catalog='mmt_demos', schema='hls_readmission_dbdemoinit')
+dbdemos.list_demos()
+
+# COMMAND ----------
+
+# dbdemos.install('lakehouse-hls-readmission', catalog='mmt_demos', schema='hls_readmission_dbdemoinit')
+
+# Installing demo lakehouse-hls-readmission under /Users/may.merkletan@databricks.com/REPOs/dbdemos-notebooks/demo-HLS/mmt_init_hls_lpr_dbdemo, please wait...
+# Help us improving dbdemos, share your feedback or create an issue if something isn't working: https://github.com/databricks-demos/dbdemos
 
 # COMMAND ----------
 

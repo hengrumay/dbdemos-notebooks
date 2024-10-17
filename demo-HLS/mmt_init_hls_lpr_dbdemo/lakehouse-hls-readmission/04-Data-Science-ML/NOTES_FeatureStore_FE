@@ -1,0 +1,11 @@
+First thing first, import fe package instead of the deprecated fs package for implementing feature-store/engineering capabilities.
+streaming table digestion and creating streaming feature table from streaming df (syntax difference than usual fe.create_table() due to need taking care of schema inference/merge mode (for UPSERT). This applies to near-real-time changing features such as inventory availability.
+Feature Spec for on-demand live features computation/transformation. This applies to the need of applying the feature engineering on-the-fly, e.g., a user comes in at time xxx and we need to calculate the distance between the user's geo location and a vacation destination for that moment on the fly. Other examples, we need to convert the user query time in real-time: day/week/month hour/minute to sin/cosine value for modeling purpose.
+also learn how feature spec (FeatureFunction) is defined as a udf in SQL using Python syntax (alternatively, suppose we can just define a python function and register it as a udf) and how it is later included in the feature_lookups chunk before fe.create_training_set().
+for batch model training and scoring, there is no need to serve anything, so regular feature table is good enough to throw into ML algorithms like XGBoost or autoML.
+for real-time inference, e.g., query examples comes in JSON format, you can think of it as a row-format dataset instead of a column-format large dataset (which should be loaded as a df), latency is king and we basically need to serve whatever can be served on the table, including:
+model endpoint
+online table
+ online table is either backed up by databricks serverless compute managed read-only copy of delta table in a row-format way, or it could use 3rd party K-V database like Amazon DynamoDB, Microsoft CosmosDB, and Google BigQuery DB.
+Feature Spec endpoint
+yes, feature transformation could be served on a dedicated endpoint just like a model can be served, instead of prediction of outcome, it yields the transformed feature values.
