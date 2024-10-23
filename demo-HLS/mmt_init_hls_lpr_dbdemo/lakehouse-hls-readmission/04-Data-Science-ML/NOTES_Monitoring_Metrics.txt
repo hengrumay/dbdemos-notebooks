@@ -1,0 +1,42 @@
+https://docs.databricks.com/en/lakehouse-monitoring/monitor-output.html
+
+There are several types of data drift metrics that can be used to monitor changes in data distributions over time. Here are the key types of data drift metrics:
+
+1. **Consecutive Drift**: This metric compares a current time window to the previous time window. It is only calculated if a consecutive time window exists after aggregation according to the specified granularities.
+
+2. **Baseline Drift**: This metric compares a current time window to a baseline distribution determined by a baseline table. It is only calculated if a baseline table is provided.
+
+3. **Chi-Squared Test**: This statistical test is used to detect drift in the distribution of categorical data.
+
+4. **Kolmogorov-Smirnov (KS) Test**: This test is used to detect drift in the distribution of numeric data.
+
+5. **Total Variation (TV) Distance**: This metric measures the difference in distribution shape for numeric data.
+
+6. **L-Infinity Distance**: This metric measures the maximum difference between two distributions.
+
+7. **Jensen-Shannon (JS) Distance**: This metric measures the difference between probability distributions for categorical data.
+
+8. **Wasserstein Distance**: This metric measures the drift between two numeric distributions.
+
+9. **Population Stability Index (PSI)**: This metric compares the drift between two numeric distributions, indicating how different two distributions are.
+
+These metrics are stored in the drift metrics table and can be used to visualize or alert on changes in the data rather than specific values. They help in identifying shifts in data distributions that could impact model performance or data quality.
+
+https://docs.databricks.com/en/lakehouse-monitoring/fairness-bias.html
+The monitor automatically computes metrics that compare the performance of the classification model between groups. The following metrics are reported in the profile metrics table:
+
+predictive_parity, which compares the model’s precision between groups.
+
+predictive_equality, which compares false positive rates between groups.
+
+equal_opportunity, which measures whether a label is predicted equally well for both groups.
+
+statistical_parity, which measures the difference in predicted outcomes between groups.
+
+These metrics are calculated only if the analysis type is InferenceLog and problem_type is classification.
+
+For definitions of these metrics, see the following references:
+
+Wikipedia article on fairness in machine learning: https://en.wikipedia.org/wiki/Fairness_(machine_learning)
+
+Fairness Definitions Explained, Verma and Rubin, 2018

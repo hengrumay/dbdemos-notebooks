@@ -1,7 +1,7 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC ## Helperfuncs for Inference Table Monitoring   
-# MAGIC - some code updates with comments `-- updated mmt 2024Oct`
+# MAGIC <!-- - some code updates with comments `-- updated mmt 2024Oct` -->
 
 # COMMAND ----------
 

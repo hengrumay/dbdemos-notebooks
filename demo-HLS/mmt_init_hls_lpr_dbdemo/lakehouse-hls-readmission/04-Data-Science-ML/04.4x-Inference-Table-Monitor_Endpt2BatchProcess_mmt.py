@@ -11,9 +11,6 @@
 # COMMAND ----------
 
 # DBTITLE 1,dependencies | libraries
-# import pyspark.sql.functions as F
-# from pyspark.sql.window import Window
-
 from pyspark.sql import functions as F, types as T, window as w
 import random
 
@@ -22,7 +19,7 @@ import random
 # DBTITLE 1,UC/endpoint variables
 catalog, db, model_name = "mmt_demos.hls_readmission_dbdemoinit.dbdemos_hls_pr".split('.')
 catalog, db, model_name
-# serving_endpoint_name = "dbdemos_hls_pr_endpoint_v2" ## update
+# serving_endpoint_name = "dbdemos_hls_pr_endpoint_v2" ## 
 
 # COMMAND ----------
 

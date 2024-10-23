@@ -184,6 +184,9 @@ create_save_cohort('all_patients')
 # MAGIC %md
 # MAGIC
 # MAGIC Open the <a dbdemos-dashboard-id="patient-summary" href='/sql/dashboardsv3/01ef8106d38f17ada7c2b4c32a460a1e' target="_blank">Cohort patient analysis Dashboard</a> to start reviewing our cohort data.
+# MAGIC
+# MAGIC - https://docs.databricks.com/en/dashboards/admin/index.html 
+# MAGIC - https://docs.databricks.com/en/dashboards/index.html#export-import-or-replace-a-dashboard 
 
 # COMMAND ----------
 

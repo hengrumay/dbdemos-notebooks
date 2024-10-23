@@ -74,16 +74,18 @@ from databricks.sdk.service.catalog import MonitorInfoStatus, MonitorRefreshInfo
 
 
 w = WorkspaceClient()
-refresh_info = w.quality_monitors.run_refresh(table_name=f"{catalog}.{db}.hls_readmission_inference_processed")
+refresh_info = w.quality_monitors.run_refresh(table_name=f"{catalog}.{db}.hls_readmission_batch_inference")
 
-while refresh_info.state in (MonitorRefreshInfoState.PENDING, MonitorRefreshInfoState.RUNNING):
-  refresh_info = w.quality_monitors.get_refresh(table_name=f"{catalog}.{db}.hls_readmission_inference_processed", refresh_id=refresh_info.refresh_id)
-  time.sleep(30)
+# COMMAND ----------
+
+# while refresh_info.state in (MonitorRefreshInfoState.PENDING, MonitorRefreshInfoState.RUNNING):
+#   refresh_info = w.quality_monitors.get_refresh(table_name=f"{catalog}.{db}.hls_readmission_batch_inference", refresh_id=refresh_info.refresh_id)
+#   time.sleep(30)
 
 # COMMAND ----------
 
 # DBTITLE 1,Programmatically retrieve profile and drift table names from monitor info
-monitor_info = w.quality_monitors.get(table_name=f"{catalog}.{db}.hls_readmission_inference_processed")
+monitor_info = w.quality_monitors.get(table_name=f"{catalog}.{db}.hls_readmission_batch_inference")
 drift_table_name = monitor_info.drift_metrics_table_name
 profile_table_name = monitor_info.profile_metrics_table_name
 
@@ -95,7 +97,8 @@ profile_table_name = monitor_info.profile_metrics_table_name
 # MAGIC
 # MAGIC Once the monitor is refreshed, refreshing the monitoring dashboard will show the latest model performance metrics. When evaluated against the latest labelled data, the model has poor accuracy, weighted F1 score and recall. On the other hand, it has a weighted precision of 1.
 # MAGIC
-# MAGIC We expect this because the model is now heavily weighted towards the `churn = Yes` class. All predictions of `Yes` are correct, leading to a weighted precision of 1.
+# MAGIC <!-- We expect this because the model is now heavily weighted towards the `churn = Yes` class. All predictions of `Yes` are correct, leading to a weighted precision of 1. -->
+# MAGIC We expect this because the model is now heavily weighted towards the `30_day_readmissions = 1` class. All predictions of `1` are correct, leading to a weighted precision of 1.
 # MAGIC
 # MAGIC <br>
 # MAGIC
@@ -105,7 +108,9 @@ profile_table_name = monitor_info.profile_metrics_table_name
 # MAGIC
 # MAGIC We will go ahead and illustrate how you can programatically retrieve the drift metrics and trigger model retraining.
 # MAGIC
-# MAGIC However, it is worthwhile to mention that by inspecting the confusion matrix in the monitoring dashboard, we can see that the latest labelled data only has the `Yes` label. i.e. all customers have churned. This is an unlikely scenario. That should lead us to question whether labelling was done correctly, or if there were data quality issues upstream. These causes of label drift do not necessitate model retraining.
+# MAGIC <!-- However, it is worthwhile to mention that by inspecting the confusion matrix in the monitoring dashboard, we can see that the latest labelled data only has the `Yes` label. i.e. all customers have churned. This is an unlikely scenario. That should lead us to question whether labelling was done correctly, or if there were data quality issues upstream. These causes of label drift do not necessitate model retraining. -->
+# MAGIC
+# MAGIC However, it is worthwhile to mention that by inspecting the confusion matrix in the monitoring dashboard, we can see that the latest labelled data only has the `Yes` label. i.e. all patients have been `re-admitted`. This is an unlikely scenario. That should lead us to question whether labelling was done correctly, or if there were data quality issues upstream. These causes of label drift do not necessitate model retraining.
 # MAGIC
 # MAGIC <br>
 # MAGIC
@@ -143,8 +148,8 @@ performance_metrics_df = spark.sql(f"""
 SELECT
   window.start as time,
   {metric} AS performance_metric,
-  expected_loss,
-  __db_model_id AS `Model Id`
+  positive_prediction_count,
+  model_info AS `Model Id`
 FROM {profile_table_name}
 WHERE
   window.start >= "2024-10-01"
@@ -152,7 +157,7 @@ WHERE
   AND column_name = ":table"
   AND slice_key is null
   AND slice_value is null
-  AND Model_Version = '{model_id}'
+  -- AND Model_Version = '{model_id}'
 ORDER BY
   window.start
 """
@@ -171,14 +176,14 @@ drift_metrics_df = spark.sql(f"""
   window.start AS time,
   column_name,
   {drift} AS drift_metric,
-  Model_Version AS `Model Id`
+  model_info AS `Model Id`
 FROM {drift_table_name}
 WHERE
-  column_name IN ('predictions', '30_DAY_READMISSION')
+  column_name IN ('risk_prediction', '30_DAY_READMISSION')
   AND window.start >= "2024-10-01"
   AND slice_key is null
   AND slice_value is null
-  AND Model_Version = '{model_id}'
+  -- AND Model_Version = '{model_id}'
   AND drift_type = "CONSECUTIVE"
 ORDER BY
   window.start
@@ -217,24 +222,40 @@ display(all_metrics_df)
 # MAGIC
 # MAGIC ## Count total violations and save as task value
 # MAGIC
-# MAGIC Here we will define the different threshholds for the metrics we are interested in to qualify a drift:
-# MAGIC - Performance metric < 0.5 
-# MAGIC - Average Expected Loss per customer (our custom metric connected to business) > 30 dollars
+# MAGIC Here we will define the different threshholds for the metrics we are interested in to qualify a drift e.g.:
+# MAGIC - Performance metric < 0.85 
+# MAGIC - Precision/Recall Threshold 
+# MAGIC <!-- - Average Expected Loss per customer (our custom metric connected to business) > 30 dollars -->
+
+# COMMAND ----------
+
+# from pyspark.sql.functions import col, abs
+
+# performance_violation_count = all_metrics_df.where(
+#     (col("performance_metric") < 0.85) & (abs(col("expected_loss")) > 30)
+# ).count()
+
+# drift_violation_count = 0
+# if not drift_metrics_df.isEmpty():
+#     drift_violation_count = all_metrics_df.where(
+#         (col("churn") > 0.19) & (col("prediction") > 0.19)
+#     ).count()
+
+# all_violations_count = drift_violation_count + performance_violation_count
 
 # COMMAND ----------
 
 # DBTITLE 1,count nr violations
 from pyspark.sql.functions import col, abs
 
-
 performance_violation_count = all_metrics_df.where(
-    (col("performance_metric") < 0.5) & (abs(col("expected_loss")) > 30)
+    (col("performance_metric") < 0.85) & (abs(col("positive_prediction_count")) > 30)
 ).count()
 
 drift_violation_count = 0
 if not drift_metrics_df.isEmpty():
-    drift_violation_count = all_metrics_df.where(
-        (col("churn") > 0.19) & (col("prediction") > 0.19)
+    drift_violation_count = all_metrics_df.where(        
+        (col("js_distance") > 0.19) & (col("prediction") > 0.19)
     ).count()
 
 all_violations_count = drift_violation_count + performance_violation_count

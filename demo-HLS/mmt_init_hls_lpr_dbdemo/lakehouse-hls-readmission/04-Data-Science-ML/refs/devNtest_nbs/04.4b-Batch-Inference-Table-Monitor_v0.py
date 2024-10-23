@@ -50,24 +50,36 @@
 
 # COMMAND ----------
 
-# please use 
-# https://e2-demo-field-eng.cloud.databricks.com/serving-endpoints/dbdemos_hls_pr_endpoint_v2/invocations
-# inference_v2_processed
+# MAGIC %sql
+# MAGIC select count(*) from patient_readmission_prediction
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC -- SELECT * FROM inference_processed LIMIT 10;
-# MAGIC SELECT * FROM inference_v2_processed LIMIT 10;
+# MAGIC select * from patient_readmission_prediction limit 10
 
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC -- CREATE OR REPLACE TABLE hls_readmission_inference_processed AS
-# MAGIC --   (SELECT * FROM inference_processed)
-# MAGIC
-# MAGIC CREATE OR REPLACE TABLE hls_readmission_inference_processed AS
-# MAGIC   (SELECT * FROM inference_v2_processed)
+# MAGIC SELECT training_dataset.*, CAST(patient_readmission_prediction.risk_prediction AS DOUBLE) AS predictions, 'mmt_demos.hls_readmission_dbdemoinit.dbdemos_hls_pr_1' AS __db_model_id, inference_v2_processed.__db_timestamp AS __db_timestamp
+# MAGIC FROM training_dataset
+# MAGIC JOIN patient_readmission_prediction
+# MAGIC ON training_dataset.patient_id = patient_readmission_prediction.patient_id
+# MAGIC AND training_dataset.encounter_id = patient_readmission_prediction.encounter_id
+# MAGIC JOIN inference_v2_processed
+# MAGIC ON training_dataset.patient_id = inference_v2_processed.patient_id
+# MAGIC AND training_dataset.encounter_id = inference_v2_processed.encounter_id
+# MAGIC LIMIT 10
+
+# COMMAND ----------
+
+## add comments!
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC CREATE OR REPLACE TABLE hls_readmission_batch_inference AS
+# MAGIC   (SELECT * FROM patient_readmission_prediction)
 
 # COMMAND ----------
 
@@ -90,11 +102,11 @@
 
 # MAGIC %sql
 # MAGIC CREATE OR REPLACE TABLE hls_readmission_baseline AS
-# MAGIC   (SELECT training_dataset.*, CAST(patient_readmission_prediction.risk_prediction AS BIGINT) AS predictions, 'mmt_demos.hls_readmission_dbdemoinit.dbdemos_hls_pr_1' AS __db_model_id
+# MAGIC   (SELECT training_dataset.*, CAST(patient_readmission_prediction.risk_prediction AS DOUBLE) AS predictions, 'mmt_demos.hls_readmission_dbdemoinit.dbdemos_hls_pr_1' AS __db_model_id
 # MAGIC   FROM training_dataset
 # MAGIC   JOIN patient_readmission_prediction
 # MAGIC   ON training_dataset.patient_id = patient_readmission_prediction.patient_id
-# MAGIC   AND training_dataset.encounter_id = patient_readmission_prediction.encounter_id)
+# MAGIC   AND training_dataset.encounter_id = patient_readmission_prediction.encounter_id LIMIT 1000)
 
 # COMMAND ----------
 
@@ -134,18 +146,18 @@ from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.catalog import MonitorInferenceLog, MonitorInferenceLogProblemType
 
 
-print(f"Creating monitor for inference table {catalog}.{db}.hls_readmission_inference_processed")
+print(f"Creating monitor for inference table {catalog}.{db}.hls_readmission_batch_inference")
 w = WorkspaceClient()
 
 info = w.quality_monitors.create(
-  table_name=f"{catalog}.{db}.hls_readmission_inference_processed",
+  table_name=f"{catalog}.{db}.hls_readmission_batch_inference",
   inference_log=MonitorInferenceLog(
         problem_type=MonitorInferenceLogProblemType.PROBLEM_TYPE_CLASSIFICATION,
         prediction_col="predictions",
         timestamp_col="__db_timestamp",
         granularities=["1 day"],
         model_id_col="__db_model_id",
-        label_col=None #"30_DAY_READMISSION", # optional
+        label_col="30_DAY_READMISSION", # optional
   ),
   assets_dir=f"{os.getcwd()}/monitoring", # Change this to another folder of choice if needed
   output_schema_name=f"{catalog}.{db}",
@@ -166,7 +178,7 @@ from databricks.sdk.service.catalog import MonitorInfoStatus, MonitorRefreshInfo
 
 # Wait for monitor to be created
 while info.status == MonitorInfoStatus.MONITOR_STATUS_PENDING:
-  info = w.quality_monitors.get(table_name=f"{catalog}.{db}.hls_readmission_inference_processed")
+  info = w.quality_monitors.get(table_name=f"{catalog}.{db}.hls_readmission_batch_inference")
   time.sleep(10)
 
 assert info.status == MonitorInfoStatus.MONITOR_STATUS_ACTIVE, "Error creating monitor"
@@ -177,19 +189,19 @@ assert info.status == MonitorInfoStatus.MONITOR_STATUS_ACTIVE, "Error creating m
 
 # COMMAND ----------
 
-refreshes = w.quality_monitors.list_refreshes(table_name=f"{catalog}.{db}.hls_readmission_inference_processed").refreshes
+refreshes = w.quality_monitors.list_refreshes(table_name=f"{catalog}.{db}.hls_readmission_batch_inference").refreshes
 assert(len(refreshes) > 0)
 
 run_info = refreshes[0]
 while run_info.state in (MonitorRefreshInfoState.PENDING, MonitorRefreshInfoState.RUNNING):
-  run_info = w.quality_monitors.get_refresh(table_name=f"{catalog}.{db}.hls_readmission_inference_processed", refresh_id=run_info.refresh_id)
+  run_info = w.quality_monitors.get_refresh(table_name=f"{catalog}.{db}.hls_readmission_batch_inference", refresh_id=run_info.refresh_id)
   time.sleep(30)
 
 assert run_info.state == MonitorRefreshInfoState.SUCCESS, "Monitor refresh failed"
 
 # COMMAND ----------
 
-w.quality_monitors.get(table_name=f"{catalog}.{db}.hls_readmission_inference_processed")
+w.quality_monitors.get(table_name=f"{catalog}.{db}.hls_readmission_batch_inference")
 
 # COMMAND ----------
 

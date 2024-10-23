@@ -532,13 +532,24 @@ for i in range(3):
 
 # MAGIC %md # Optional: Deploy our Function as Feature Spec to compute transformations in realtime
 # MAGIC
-# MAGIC Our function can be saved as a Feature Spec and deployed standalone Model Serving Endpoint to serve any transformation.
+# MAGIC Our function can be saved as a Feature Spec and deployed standalone Feature Serving Endpoint to serve any transformation.
 # MAGIC
 # MAGIC Here is an example on how you can create a feature spec to compute the distance between 2 points.
 # MAGIC
 # MAGIC This feature spec will do the lookup for you and call the `distance_df` function (as define in the `feature_lookups`).
 # MAGIC
-# MAGIC Once the feature spec deployed, you can use the [Serving Endpoint menu](ml/endpoints) to create a new endpoint.
+# MAGIC Once the feature spec created, you can use the [Serving Endpoint menu](ml/endpoints) to create a new endpoint for feature serving.
+# MAGIC
+# MAGIC To access the feature table from Feature Serving, you must create an __Online Table__ from the feature table.
+# MAGIC Feature table is used for offline training of models, and __online table__ is used in __online inference__.
+# MAGIC
+# MAGIC Ref: 
+# MAGIC 1. https://docs.databricks.com/en/machine-learning/feature-store/online-tables.html
+# MAGIC 2. https://docs.databricks.com/en/machine-learning/feature-store/feature-function-serving.html
+# MAGIC
+# MAGIC When to use feature serving?
+# MAGIC ![when-to-use-feature-serving](https://docs.databricks.com/en/_images/when-to-use-feature-serving.png)
+# MAGIC
 
 # COMMAND ----------
 

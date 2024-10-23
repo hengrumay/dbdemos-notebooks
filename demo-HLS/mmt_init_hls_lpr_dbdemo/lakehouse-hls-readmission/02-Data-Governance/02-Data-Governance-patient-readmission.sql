@@ -38,6 +38,8 @@
 -- MAGIC * Data exploration & discovery,
 -- MAGIC * Sharing data with external organization (Delta Sharing),
 -- MAGIC * (*coming soon*) Attribute-based access control. 
+-- MAGIC
+-- MAGIC ref: https://docs.databricks.com/en/tables/row-and-column-filters.html#
 
 -- COMMAND ----------
 
@@ -95,12 +97,12 @@ SELECT * FROM patients;
 
 -- COMMAND ----------
 
--- DBTITLE 0,orignal code
+-- DBTITLE 1,orignal code [doesn't work with streaming tables]
 -- hls_admin group will have access to all data, all other users will see a masked information.
 CREATE OR REPLACE FUNCTION simple_mask(column_value STRING)
    RETURN IF(is_account_group_member('hls_admin'), column_value, "****");
    
--- ALTER FUNCTION simple_mask OWNER TO `account users`; -- grant access to all user to the function for the demo
+-- ALTER FUNCTION simple_mask OWNER TO `account users`; -- grant access to all user to the function for the demo - don't do it in production
 
 -- Mask all PII information
 ALTER TABLE patients ALTER COLUMN FIRST SET MASK simple_mask;
@@ -110,15 +112,7 @@ ALTER TABLE patients ALTER COLUMN DRIVERS SET MASK simple_mask;
 ALTER TABLE patients ALTER COLUMN SSN SET MASK simple_mask;
 ALTER TABLE patients ALTER COLUMN ADDRESS SET MASK simple_mask;
 
--- ALTER FUNCTION simple_mask OWNER TO `account users`; -- grant access to all user to the function for the demo - don't do it in production
-
 SELECT * FROM patients
-
--- COMMAND ----------
-
-select * FROM patients as, 
--- ##
-mask_pii_patients
 
 -- COMMAND ----------
 
@@ -218,7 +212,10 @@ SELECT * FROM masked_patients;
 -- MAGIC
 -- MAGIC In the image below, you can see every possible data (both ingested and created internally) in the same lineage graph, irrespective of the data type (stream vs batch), file type (csv, json, xml), language (SQL, python), or tool used (DLT, SQL query, Databricks Feature Store, or a python Notebook).
 -- MAGIC
--- MAGIC **Note**: To explore the whole lineage, open navigate to the Data Explorer, and find the ```customer_gold``` table inside your catalog and database.
+-- MAGIC **Note**: To explore the whole lineage, open navigate to the Data Explorer, and find the ```condition_occurrence``` | ```drug_exposure``` | *`gold`* *medallion* table inside your catalog and database.
+-- MAGIC
+-- MAGIC
+-- MAGIC <!-- **Note**: To explore the whole lineage, open navigate to the Data Explorer, and find the ```customer_gold``` table inside your catalog and database. -->
 
 -- COMMAND ----------
 
@@ -232,7 +229,7 @@ SELECT * FROM masked_patients;
 
 -- COMMAND ----------
 
--- DBTITLE 1,Create a Delta Sharing Share (original)
+-- DBTITLE 0,Create a Delta Sharing Share (original)
 -- CREATE SHARE IF NOT EXISTS dbdemos_patient_readmission_visits 
 --   COMMENT 'Sharing patients table from the hls_readmissions Demo.';
  
@@ -257,6 +254,8 @@ GRANT USE SCHEMA ON SCHEMA mmt_demos.hls_readmission_dbdemoinit TO `account user
 -- Grant SELECT privilege on the table to the user
 GRANT SELECT ON TABLE mmt_demos.hls_readmission_dbdemoinit.patients TO `account users`;
 
+
+
 -- Create the share if it does not exist
 CREATE SHARE IF NOT EXISTS mmt_dbdemos_hls_readmission_dbdemoinit_share 
   COMMENT 'Sharing patients table from the hls_readmission_dbdemoinit Demo.';
@@ -273,7 +272,10 @@ DESCRIBE SHARE mmt_dbdemos_hls_readmission_dbdemoinit_share;
 
 -- COMMAND ----------
 
--- https://e2-demo-field-eng.cloud.databricks.com/explore/sharing/shares/mmt_dbdemos_hls_readmission_dbdemoinit_share?o=1444828305810485
+-- MAGIC %md
+-- MAGIC Refs: 
+-- MAGIC - [mmt_dbdemos_hls_readmission_dbdemoinit_share](https://e2-demo-field-eng.cloud.databricks.com/explore/sharing/shares/mmt_dbdemos_hls_readmission_dbdemoinit_share?o=1444828305810485)
+-- MAGIC - https://docs.databricks.com/en/delta-sharing/create-recipient.html
 
 -- COMMAND ----------
 

@@ -100,6 +100,9 @@
 -- MAGIC Let's implement the following flow: 
 -- MAGIC
 -- MAGIC  <img src="https://raw.githubusercontent.com/databricks-demos/dbdemos-resources/main/images/hls/patient-readmission/hls-patient-readmision-dlt-0.png" width="1000px" />
+-- MAGIC
+-- MAGIC ref: https://www.databricks.com/glossary/materialized-views 
+-- MAGIC
 
 -- COMMAND ----------
 
@@ -163,7 +166,7 @@ CREATE OR REFRESH STREAMING LIVE TABLE concept_relationship
 -- MAGIC
 -- MAGIC The next layer often call silver is consuming **incremental** data from the bronze one, and cleaning up some information.
 -- MAGIC
--- MAGIC We're also adding an TODO [expectation](https://docs.databricks.com/workflows/delta-live-tables/delta-live-tables-expectations.html) on different field to enforce and track our Data Quality. This will ensure that our dashboard are relevant and easily spot potential errors due to data anomaly.
+-- MAGIC We're also adding an (TODO) [expectation](https://docs.databricks.com/workflows/delta-live-tables/delta-live-tables-expectations.html) on different field to enforce and track our Data Quality. This will ensure that our dashboard are relevant and easily spot potential errors due to data anomaly.
 -- MAGIC
 -- MAGIC For more advanced DLT capabilities run `dbdemos.install('dlt-loans')` or `dbdemos.install('dlt-cdc')` for CDC/SCDT2 example.
 -- MAGIC

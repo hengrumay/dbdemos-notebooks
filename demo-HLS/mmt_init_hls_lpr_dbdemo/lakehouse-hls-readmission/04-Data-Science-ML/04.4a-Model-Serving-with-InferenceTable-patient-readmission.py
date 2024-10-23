@@ -117,28 +117,6 @@ else:
 
 # COMMAND ----------
 
-# import time
-
-# max_retries = 3  # Maximum number of retries
-# retry_delay = 600  # Delay between retries in seconds (10 minutes)
-
-# for attempt in range(max_retries):
-#     try:
-#         existing_endpoint = w.serving_endpoints.get(serving_endpoint_name)
-#         print(f"Endpoint {serving_endpoint_name} already exists - force update = {force_update}...")
-#         if force_update:
-#             w.serving_endpoints.update_config_and_wait(served_entities=endpoint_config.served_entities, name=serving_endpoint_name)
-#         break  # If the operation is successful, exit the loop
-#     except TimeoutError as e:
-#         print(f"Attempt {attempt + 1} timed out. Retrying in {retry_delay} seconds...")
-#         time.sleep(retry_delay)
-#     except Exception as e:
-#         print(f"Creating the endpoint {serving_endpoint_name}, this will take a few minutes to package and deploy the endpoint...")
-#         w.serving_endpoints.create_and_wait(name=serving_endpoint_name, config=endpoint_config)
-#         break  # Assuming creation is a one-time attempt if it doesn't exist
-
-# COMMAND ----------
-
 # MAGIC %md 
 # MAGIC Our model endpoint was automatically created. 
 # MAGIC
@@ -150,7 +128,7 @@ else:
 
 # COMMAND ----------
 
-# DBTITLE 1,example patient_id | ENCOUNTER_ID
+# DBTITLE 0,example patient_id | ENCOUNTER_ID
 # b92cc118-75a3-e3d5-b00c-1c272cfdbb9d	69e72f2b-adbe-a638-f561-790bebc5b78a
 # 73801a01-8b51-3d37-8667-c77d588fbfb1	10e43172-a220-b7b6-be39-3ca31e7d092f
 # 332bcba3-dd9a-2e75-4445-52b16c934990	a4668589-5622-88ff-26fc-0035b0e63a87

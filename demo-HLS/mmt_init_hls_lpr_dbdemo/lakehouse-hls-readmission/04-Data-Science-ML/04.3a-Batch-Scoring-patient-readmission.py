@@ -43,28 +43,51 @@
 mlflow.set_registry_uri('databricks-uc')
 
 model_name = "dbdemos_hls_pr"
+model_alias = "prod"
 
 # Load model as a Spark UDF.
-# loaded_model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.dbdemos_hls_patient_readmission@prod", result_type='double')
-
-loaded_model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.{model_name}@prod", result_type='double')
+loaded_model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.{model_name}@{model_alias}", result_type='double')
 
 # COMMAND ----------
 
+# loaded_model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.dbdemos_hls_patient_readmission@prod", result_type='double')
+
+# COMMAND ----------
+
+# DBTITLE 1,get model version for uc-register model
+client = mlflow.MlflowClient()
+
+# get a model version by alias
+model_latest_version = client.get_model_version_by_alias(f"{catalog}.{db}.{model_name}", "prod").version  ##champion 
+
+# model_alias = "prod"
+f"{catalog}.{db}.{model_name}@{model_alias}|{model_latest_version}"
+
+# COMMAND ----------
+
+# DBTITLE 1,collect batch inferencing + relevant columns
 features = loaded_model.metadata.get_input_schema().input_names()
 
 #For this demo, reuse our dataset to test the batch inferences
 test_dataset = spark.table('training_dataset')
 
-patient_risk_df =  test_dataset \
-                   .withColumn("risk_prediction", loaded_model(struct(*features))) \
-                   .select('ENCOUNTER_ID', 'PATIENT_ID', 'risk_prediction')
+patient_risk_df = (test_dataset 
+                   .withColumn("risk_prediction", loaded_model(struct(*features)))          
+                   .withColumn("model_info", 
+                               F.lit(f"{catalog}.{db}.{model_name}@{model_alias}|{model_latest_version}")
+                              ) 
+                   .withColumn("current_datetime", F.current_timestamp()) 
+                   .withColumn("current_timestamp", F.to_unix_timestamp("current_datetime"))
+                   .select(*features + ['ENCOUNTER_ID', 'PATIENT_ID', 'risk_prediction', 
+                                        'model_info', 'current_datetime','current_timestamp'] ## added 
+                          )
+                  )
 
 display(patient_risk_df)
 
 # COMMAND ----------
 
-## probably worth including a datetime column | ^ can be use on it's own for monitoring with change data capture 
+patient_risk_df.count()
 
 # COMMAND ----------
 
@@ -75,8 +98,14 @@ display(patient_risk_df)
 
 # COMMAND ----------
 
+# f"{catalog}.{db}.patient_readmission_prediction"
+
+spark.sql(f"""DROP TABLE IF EXISTS `{catalog}.{db}.patient_readmission_prediction`;""")
+
+# COMMAND ----------
+
 # DBTITLE 1,Let's save our prediction as a new table
-patient_risk_df.write.mode("overwrite").saveAsTable(f"patient_readmission_prediction")
+patient_risk_df.write.option("mergeSchema", "true").mode("overwrite").saveAsTable(f"patient_readmission_prediction")
 
 # COMMAND ----------
 
@@ -85,7 +114,7 @@ patient_risk_df.write.mode("overwrite").saveAsTable(f"patient_readmission_predic
 # MAGIC ### Next steps
 # MAGIC
 # MAGIC at risk and providing cusom care to reduce readmission risk,
-# MAGIC - Deploy Real time inference with [04.4-Model-Serving-patient-readmission]($./04.4-Model-Serving-patient-readmission) to enable realtime capabilities and instantly get insight for a specific patient (Databricks Serverless Model Serving).
+# MAGIC - Deploy Real time inference with [04.4a-Model-Serving-with-InferenceTable-patient-readmission]($./04.4a-Model-Serving-with-InferenceTable-patient-readmission) to enable realtime capabilities and instantly get insight for a specific patient (Databricks Serverless Model Serving).
 # MAGIC
 # MAGIC Or
 # MAGIC

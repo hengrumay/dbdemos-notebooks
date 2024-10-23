@@ -117,7 +117,7 @@ html
 
 # COMMAND ----------
 
-# DBTITLE 1,to download iml-bundle.js and change src path
+# DBTITLE 0,to download iml-bundle.js and change src path
 # html = shap.force_plot(shap_values_test[i, :], ex)
 html_js = '<script type="text/javascript" src="https://jvlanalytics.nl/assets/iml-bundle.js" charset="utf-8"></script>'
 displayHTML(html_js + str(html.data))
@@ -130,7 +130,7 @@ display(HTML(str(html.data)))
 
 # COMMAND ----------
 
-# DBTITLE 1,to-do/updates
+# DBTITLE 0,to-do/updates
 # https://shap.readthedocs.io/en/latest/example_notebooks/overviews/An%20introduction%20to%20explainable%20AI%20with%20Shapley%20values.html
 
 # COMMAND ----------
@@ -162,7 +162,7 @@ shap.dependence_plot("INCOME", shap_values, train_sample[features], interaction_
 # MAGIC
 # MAGIC ref: https://www.databricks.com/blog/2022/02/02/scaling-shap-calculations-with-pyspark-and-pandas-udf.html
 # MAGIC
-# MAGIC We can use spark 3 `mapInPandas` function, or create a `@pandas_udf`:
+# MAGIC We can use spark, `mapInPandas` function, or create a `@pandas_udf`:
 # MAGIC
 
 # COMMAND ----------

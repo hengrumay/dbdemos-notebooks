@@ -167,13 +167,29 @@
 # MAGIC %md
 # MAGIC #### Machine Learning next steps:
 # MAGIC
-# MAGIC * [04.1-Feature-Engineering-patient-readmission]($./04-Data-Science-ML/04.1-Feature-Engineering-patient-readmission): Open the first notebook to analyze our data and start building our model leveraging Databricks AutoML.
-# MAGIC * [04.2-AutoML-patient-admission-risk]($./04-Data-Science-ML/04.2-AutoML-patient-admission-risk): Leverage AutoML to accelerate your model creation.
-# MAGIC * [04.3-Batch-Scoring-patient-readmission]($./04-Data-Science-ML/04.3-Batch-Scoring-patient-readmission): score our entire dataset and save the result as a new delta table for downstream usage.
-# MAGIC * [04.4-Model-Serving-patient-readmission]($./04-Data-Science-ML/04.4-Model-Serving-patient-readmission): leverage Databricks Serverless model serving to deploy instant risk evaluation and personalization.
-# MAGIC * [04.5-Explainability-patient-readmission]($./04-Data-Science-ML/04.5-Explainability-patient-readmission): Explain your model and provide specialized care.
+# MAGIC * [04.1a-Feature-Engineering-patient-readmission]($./04-Data-Science-ML/04.1a-Feature-Engineering-patient-readmission): Open the first notebook to analyze our data and start building our model leveraging Databricks AutoML.
 # MAGIC Extra:
-# MAGIC * [04.6-EXTRA-Feature-Store-ML-patient-readmission]($./04-Data-Science-ML/04.6-EXTRA-Feature-Store-ML-patient-readmission): Discover how to leverage Databricks Feature Store to create and share Feature tables with your entire organization.
+# MAGIC * [04.1b-EXTRA-Feature-Store-ML-patient-readmission]($./04-Data-Science-ML/04.1b-EXTRA-Feature-Store-ML-patient-readmission_FE): Discover how to leverage Databricks Feature Store to create and share Feature tables with your entire organization.   
+# MAGIC
+# MAGIC ---   
+# MAGIC
+# MAGIC * [04.2-AutoML-patient-admission-risk]($./04-Data-Science-ML/04.2-AutoML-patient-admission-risk): Leverage AutoML to accelerate your model creation.   
+# MAGIC ---   
+# MAGIC * [04.3a-Batch-Scoring-patient-readmission]($./04-Data-Science-ML/04.3a-Batch-Scoring-patient-readmission): score our entire dataset and save the result as a new delta table for downstream usage.
+# MAGIC * [04.3b-Batch-Inference-Table-Monitor]($./04-Data-Science-ML/04.3b-Batch-Inference-Table-Monitor): set up a Lakehouse Monitor on the Batch Inferencing Table.
+# MAGIC * [04.3c-Batch-Data-Drift-Detection]($./04-Data-Science-ML/04.3c-Batch-Data-Drift-Detection): define drift detection rules to run periodically on the inference data.
+# MAGIC
+# MAGIC ---   
+# MAGIC
+# MAGIC * [04.4a-Model-Serving-with-InferenceTable-patient-readmission]($./04-Data-Science-ML/04.4a-Model-Serving-with-InferenceTable-patient-readmission): leverage Databricks Serverless model serving to deploy instant risk evaluation and personalization.
+# MAGIC * [0.4.4x-Online Inferencing + Monitoring]($./04-Data-Science-ML/04.4x-Inference-Table-Monitor_main [v2]): Monitoring Online Inferencing and tracking model performance.
+# MAGIC
+# MAGIC ---   
+# MAGIC Extra: 
+# MAGIC * [04.5-Explainability-patient-readmission]($./04-Data-Science-ML/04.5-Explainability-patient-readmission): Explain your model and provide specialized care.
+# MAGIC
+# MAGIC <!-- Extra:
+# MAGIC * [04.6-EXTRA-Feature-Store-ML-patient-readmission]($./04-Data-Science-ML/04.6-EXTRA-Feature-Store-ML-patient-readmission): Discover how to leverage Databricks Feature Store to create and share Feature tables with your entire organization. -->
 
 # COMMAND ----------
 

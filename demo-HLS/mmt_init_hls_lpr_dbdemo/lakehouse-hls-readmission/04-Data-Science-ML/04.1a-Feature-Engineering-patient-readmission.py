@@ -58,7 +58,9 @@ display(labels)
 # MAGIC
 # MAGIC Being able to save our features in dedicated feature store simplify data management cross teamn, allowing features to be shared but also used in real-time leveraging realtime feature serving (automatically backed by ELTP databases).
 # MAGIC
-# MAGIC To keep this notebook simple, we won't be using the Feature store. If you are interested, open the [04.6-EXTRA-Feature-Store-ML-patient-readmission]($./04.6-EXTRA-Feature-Store-ML-patient-readmission) for a complete example.
+# MAGIC To keep this notebook simple, we won't be using the Feature store. If you are interested, open the [04.1b-EXTRA-Feature-Store-ML-patient-readmission]($./04.1b-EXTRA-Feature-Store-ML-patient-readmission_FE) for a complete example.
+# MAGIC
+# MAGIC <!-- To keep this notebook simple, we won't be using the Feature store. If you are interested, open the [04.6-EXTRA-Feature-Store-ML-patient-readmission]($./04.6-EXTRA-Feature-Store-ML-patient-readmission) for a complete example. -->
 
 # COMMAND ----------
 
@@ -128,7 +130,7 @@ display(spark.table("training_dataset"))
 # MAGIC
 # MAGIC In this demo, we simply created a table to save our Features. Databricks offers more advanced capabilities through the use of Feature Store including collaboration, discoverabilities and realtime backend.
 # MAGIC
-# MAGIC For more details, open [04.6-EXTRA-Feature-Store-ML-patient-readmission]($./04.6-EXTRA-Feature-Store-ML-patient-readmission).
+# MAGIC For more details, open [04.1b-EXTRA-Feature-Store-ML-patient-readmission]($./04.1b-EXTRA-Feature-Store-ML-patient-readmission_FE).
 # MAGIC
 # MAGIC *If you're starting your Data Science journey with Databricks, we recommend skipping this step and revisiting Databricks Feature Store later.*
 
