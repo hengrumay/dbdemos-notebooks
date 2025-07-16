@@ -1,7 +1,13 @@
 # Databricks notebook source
-# MAGIC %md
+# MAGIC %md-sandbox
+# MAGIC
 # MAGIC ## Helperfuncs for Inference Table Monitoring   
 # MAGIC <!-- - some code updates with comments `-- updated mmt 2024Oct` -->
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&org_id=1444828305810485&notebook=%2F04-Data-Science-ML%2F04.4x-Inference-Table-Monitor_helperfuncs&demo_name=lakehouse-hls-readmission&event=VIEW&path=%2F_dbdemos%2Flakehouse%2Flakehouse-hls-readmission%2F04-Data-Science-ML%2F04.4x-Inference-Table-Monitor_helperfuncs&version=1">
+# MAGIC
+# MAGIC <!-- note that `_mmt` is added to nb name because it helps to track the associated job -->
 
 # COMMAND ----------
 
@@ -12,6 +18,7 @@
 # COMMAND ----------
 
 # MAGIC %pip install "databricks-sdk>=0.28.0"
+# MAGIC %pip install "mlflow==2.13.1"
 
 # COMMAND ----------
 

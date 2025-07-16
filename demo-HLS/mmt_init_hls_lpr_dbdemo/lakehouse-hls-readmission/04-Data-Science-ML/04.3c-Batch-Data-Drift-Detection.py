@@ -1,5 +1,6 @@
 # Databricks notebook source
-# MAGIC %md
+# MAGIC %md-sandbox
+# MAGIC
 # MAGIC # Drift detection
 # MAGIC
 # MAGIC In this step, we will define drift detection rules to run periodically on the inference data.
@@ -12,6 +13,9 @@
 # MAGIC **Label drift** occurs when the distribution of the ground truth labels changes over time, which can happen due to shifts in labeling criteria or the introduction of labeling errors.
 # MAGIC
 # MAGIC _We will set all labels to True_
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&org_id=1444828305810485&notebook=%2F04-Data-Science-ML%2F04.3c-Batch-Data-Drift-Detection&demo_name=lakehouse-hls-readmission&event=VIEW&path=%2F_dbdemos%2Flakehouse%2Flakehouse-hls-readmission%2F04-Data-Science-ML%2F04.3c-Batch-Data-Drift-Detection&version=1">
 
 # COMMAND ----------
 

@@ -1,5 +1,6 @@
 # Databricks notebook source
-# MAGIC %md
+# MAGIC %md-sandbox
+# MAGIC
 # MAGIC # Monitor Model using Lakehouse Monitoring
 # MAGIC In this step, we will leverage Databricks Lakehouse Monitoring([AWS](https://docs.databricks.com/en/lakehouse-monitoring/index.html)|[Azure](https://learn.microsoft.com/en-us/azure/databricks/lakehouse-monitoring/)) to monitor our inference table.
 # MAGIC
@@ -19,6 +20,8 @@
 # MAGIC
 # MAGIC For demo simplicity purpose, we will use the batch scoring model inference as our inference table. We will attach a monitor to the table `patient_readmission_prediction`.
 # MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&org_id=1444828305810485&notebook=%2F04-Data-Science-ML%2F04.3b-Batch-Inference-Table-Monitor&demo_name=lakehouse-hls-readmission&event=VIEW&path=%2F_dbdemos%2Flakehouse%2Flakehouse-hls-readmission%2F04-Data-Science-ML%2F04.3b-Batch-Inference-Table-Monitor&version=1">
 
 # COMMAND ----------
 

@@ -53,28 +53,13 @@ full_model_name = f"{catalog}.{db}.{model_name}"
 import mlflow
 from mlflow import MlflowClient
 
-# Enable Unity Catalog with mlflow registry
+#Enable Unity Catalog with mlflow registry
 mlflow.set_registry_uri("databricks-uc")
 client = MlflowClient(registry_uri="databricks-uc")
 
-# Get all versions of the model
-model_versions = client.search_model_versions(f"name='{full_model_name}'")
-
-# Print all model versions for debugging
-for mv in model_versions:
-    print(f"Model version: {mv.version}, Stage: {mv.current_stage}")
-
-# Find the model version with the highest version number
-try:
-    latest_model = sorted(model_versions, key=lambda mv: int(mv.version), reverse=True)[0]
-    print(f"Latest model version: {latest_model.version}")
-except IndexError:
-    print("No model versions found.")
-
-# Update the alias to point to the latest version
-alias_name = "champion"
-client.set_registered_model_alias(full_model_name, alias_name, latest_model.version)
-print(f"Alias '{alias_name}' updated to version {latest_model.version}")
+#Get model with PROD alias (make sure you run the notebook 04.2 to save the model in UC)
+latest_model = client.get_model_version_by_alias(full_model_name, "prod")
+print(latest_model)
 
 # COMMAND ----------
 
@@ -82,81 +67,13 @@ print(f"Alias '{alias_name}' updated to version {latest_model.version}")
 
 # COMMAND ----------
 
-# DBTITLE 1,previous
-# from databricks.sdk import WorkspaceClient
-# from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput, AutoCaptureConfigInput
-
-# # serving_endpoint_name = "dbdemos_hls_patient_readmission_endpoint"
-# serving_endpoint_name = "dbdemos_hls_pr_endpoint_v3"
-
-# w = WorkspaceClient()
-
-# endpoint_config = EndpointCoreConfigInput(
-#     name=serving_endpoint_name,
-#     served_entities=[
-#         ServedEntityInput(
-#             entity_name=full_model_name,
-#             entity_version=latest_model.version,
-#             scale_to_zero_enabled=True,
-#             workload_size="Small"
-#         )
-#     ], ## Added to enable auto-capture / inference table -- mmt 2024Oct03
-#     auto_capture_config=AutoCaptureConfigInput(
-#                                                catalog_name=catalog, # from config/setup
-#                                                schema_name=db, # from config/setup
-#                                                table_name_prefix="inference_v3",
-#                                                enabled=True  # This is optional and true by default
-#                                              ),
-#     ## add Tags programmatically or manually -- or else things get deleted =S 
-#     # tags={
-#     #     "FE-SSA-demo": True,
-#     #     "do-not-delete": True,
-#     #     "removeAfter": "<yyyy-mm-dd>"
-#     # }
-# )
-
-# #Set this to True to release a newer version (the demo won't update the endpoint to a newer model version by default)
-# force_update = False 
-
-# try:
-#   existing_endpoint = w.serving_endpoints.get(serving_endpoint_name)
-#   print(f"endpoint {serving_endpoint_name} already exist - force update = {force_update}...")
-
-#   if force_update:
-#     w.serving_endpoints.update_config_and_wait(served_entities=endpoint_config.served_entities, name=serving_endpoint_name)
-    
-# except:
-#     print(f"Creating the endpoint {serving_endpoint_name}, this will take a few minutes to package and deploy the endpoint...")
-#     w.serving_endpoints.create_and_wait(name=serving_endpoint_name, config=endpoint_config)
-
-
-# if existing_endpoint and existing_endpoint.state == 'READY':
-#     # Construct the endpoint URL
-#     workspace_url = "https://<your-workspace-url>"
-#     endpoint_id = existing_endpoint.id
-#     endpoint_url = f"{workspace_url}/model/{serving_endpoint_name}/{endpoint_id}/serve"
-#     print(f"The endpoint URL is: {endpoint_url}")
-# else:
-#     print(f"The endpoint {serving_endpoint_name} is not ready. Current state: {existing_endpoint.state if existing_endpoint else 'UNKNOWN'}")
-
-# COMMAND ----------
-
-# DBTITLE 1,reset
-# Define the table name
-# table_name = "mmt_demos.hls_readmission_dbdemoinit.inference_v4_payload"
-
-# # Drop the table if it exists
-# spark.sql(f"DROP TABLE IF EXISTS {table_name}")
-
-# COMMAND ----------
-
-# DBTITLE 1,Serve Model -- update if endpoint exists
 from databricks.sdk import WorkspaceClient
 from databricks.sdk.service.serving import ServedEntityInput, EndpointCoreConfigInput, AutoCaptureConfigInput
-from databricks.sdk.errors import ResourceConflict
 
 # serving_endpoint_name = "dbdemos_hls_patient_readmission_endpoint"
-serving_endpoint_name = "dbdemos_hls_pr_endpoint_v4"
+# serving_endpoint_name = "dbdemos_hls_pr_endpoint"
+# serving_endpoint_name = "dbdemos_hls_pr_endpoint_v2"
+serving_endpoint_name = "dbdemos_hls_pr_endpoint_v3"
 
 w = WorkspaceClient()
 
@@ -169,45 +86,39 @@ endpoint_config = EndpointCoreConfigInput(
             scale_to_zero_enabled=True,
             workload_size="Small"
         )
-    ], 
+    ], ## Added to enable auto-capture / inference table -- mmt 2024Oct03
     auto_capture_config=AutoCaptureConfigInput(
-        catalog_name=catalog, 
-        schema_name=db, 
-        table_name_prefix="inference_v4",
-        enabled=True
+       catalog_name=catalog, # from config/setup
+       schema_name=db, # from config/setup
+    #    table_name_prefix="inference",
+       table_name_prefix="inference_v2",
+       enabled=True  # This is optional and true by default
     )
 )
 
-# Set this to True to release a newer version (the demo won't update the endpoint to a newer model version by default)
-force_update = True
-
-existing_endpoint = None
+#Set this to True to release a newer version (the demo won't update the endpoint to a newer model version by default)
+force_update = False 
 
 try:
-    existing_endpoint = w.serving_endpoints.get(serving_endpoint_name)
-    print(f"Endpoint {serving_endpoint_name} already exists - force update = {force_update}...")
+  existing_endpoint = w.serving_endpoints.get(serving_endpoint_name)
+  print(f"endpoint {serving_endpoint_name} already exist - force update = {force_update}...")
 
-    if force_update:
-        w.serving_endpoints.update_config_and_wait(
-            served_entities=endpoint_config.served_entities, 
-            name=serving_endpoint_name
-        )
-except ResourceConflict:
-    print(f"Endpoint {serving_endpoint_name} already exists.")
-except Exception as e:
+  if force_update:
+    w.serving_endpoints.update_config_and_wait(served_entities=endpoint_config.served_entities, name=serving_endpoint_name)
+    
+except:
     print(f"Creating the endpoint {serving_endpoint_name}, this will take a few minutes to package and deploy the endpoint...")
     w.serving_endpoints.create_and_wait(name=serving_endpoint_name, config=endpoint_config)
 
-if existing_endpoint and existing_endpoint.state == 'READY':
+
+if existing_endpoint.state == 'READY':
     # Construct the endpoint URL
-    workspace_url = dbutils.notebook.entry_point.getDbutils().notebook().getContext().tags().get("browserHostName").get()
-    print(f"Workspace URL: {workspace_url}")
-    
+    workspace_url = "https://<your-workspace-url>"
     endpoint_id = existing_endpoint.id
     endpoint_url = f"{workspace_url}/model/{serving_endpoint_name}/{endpoint_id}/serve"
     print(f"The endpoint URL is: {endpoint_url}")
 else:
-    print(f"The endpoint {serving_endpoint_name} is not ready. Current state: {existing_endpoint.state if existing_endpoint else 'UNKNOWN'}")
+    print(f"The endpoint {serving_endpoint_name} is not ready. Current state: {existing_endpoint.state}")
 
 # COMMAND ----------
 
@@ -215,7 +126,7 @@ else:
 # MAGIC Our model endpoint was automatically created. 
 # MAGIC
 # MAGIC <!-- Open the [endpoint UI](#mlflow/endpoints/dbdemos_hls_pr_endpoint) to explore your endpoint and use the UI to send queries.    -->
-# MAGIC Open the [endpoint UI](#mlflow/endpoints/dbdemos_hls_pr_endpoint_v3) to explore your endpoint and use the UI to send queries. 
+# MAGIC Open the [endpoint UI](#mlflow/endpoints/dbdemos_hls_pr_endpoint_v2) to explore your endpoint and use the UI to send queries. 
 # MAGIC **!!! Refer to cell below for json input example**
 # MAGIC
 # MAGIC *Note that the first deployment will build your model image and take a few minutes. It'll then stop & start instantly.*

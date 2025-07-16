@@ -39,21 +39,55 @@ else:
 
 # COMMAND ----------
 
+# DBTITLE 1,previous
+# import mlflow
+# import time 
+# import plotly.express as px
+# import shap
+# import pandas as pd
+# import numpy as np
+    
+# from databricks.feature_store import FeatureStoreClient
+# fs = FeatureStoreClient()
+# from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
+# import plotly.express as px
+# from plotly.subplots import make_subplots
+# import plotly.graph_objects as go
+# from mlflow.models.model import Model
+# from databricks import feature_store
+# from pyspark.sql.types import *
+# from pyspark.sql.functions import *
+# import pyspark.sql.functions as F
+
+# from datetime import date
+
+# def drop_fs_table(table_name):
+#   try:
+#     fs.drop_table(table_name)  
+#   except Exception as e:
+#     print(f"Can't drop the fs table, probably doesn't exist? {e}")
+#   try:
+#     spark.sql(f"DROP TABLE IF EXISTS `{table_name}`")
+#   except Exception as e:
+#     print(f"Can't drop the delta table, probably doesn't exist? {e}")
+
+
+# COMMAND ----------
+
 import mlflow
 import time 
 import plotly.express as px
 import shap
 import pandas as pd
 import numpy as np
-    
-from databricks.feature_store import FeatureStoreClient
-fs = FeatureStoreClient()
+
+from databricks.feature_engineering import FeatureEngineeringClient
+fe = FeatureEngineeringClient()
 from mlflow.store.artifact.models_artifact_repo import ModelsArtifactRepository
 import plotly.express as px
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 from mlflow.models.model import Model
-from databricks import feature_store
 from pyspark.sql.types import *
 from pyspark.sql.functions import *
 import pyspark.sql.functions as F
@@ -62,11 +96,10 @@ from datetime import date
 
 def drop_fs_table(table_name):
   try:
-    fs.drop_table(table_name)  
+    fe.drop_table(table_name)  
   except Exception as e:
     print(f"Can't drop the fs table, probably doesn't exist? {e}")
   try:
     spark.sql(f"DROP TABLE IF EXISTS `{table_name}`")
   except Exception as e:
     print(f"Can't drop the delta table, probably doesn't exist? {e}")
-

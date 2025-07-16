@@ -13,11 +13,20 @@
 # MAGIC
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
-# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&org_id=1444828305810485&notebook=%2F04-Data-Science-ML%2F04.1-Feature-Engineering-patient-readmission&demo_name=lakehouse-hls-readmission&event=VIEW&path=%2F_dbdemos%2Flakehouse%2Flakehouse-hls-readmission%2F04-Data-Science-ML%2F04.1-Feature-Engineering-patient-readmission&version=1">
+# MAGIC <!-- <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&org_id=1444828305810485&notebook=%2F04-Data-Science-ML%2F04.1-Feature-Engineering-patient-readmission&demo_name=lakehouse-hls-readmission&event=VIEW&path=%2F_dbdemos%2Flakehouse%2Flakehouse-hls-readmission%2F04-Data-Science-ML%2F04.1-Feature-Engineering-patient-readmission&version=1"> -->
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&org_id=1444828305810485&notebook=%2F04-Data-Science-ML%2F04.1a-Feature-Engineering-patient-readmission&demo_name=lakehouse-hls-readmission&event=VIEW&path=%2F_dbdemos%2Flakehouse%2Flakehouse-hls-readmission%2F04-Data-Science-ML%2F04.1a-Feature-Engineering-patient-readmission&version=1">
 
 # COMMAND ----------
 
 # MAGIC %run ../_resources/00-setup $reset_all_data=false
+
+# COMMAND ----------
+
+# DBTITLE 1,clear training dataset
+# Drop the training_dataset table if it exists
+# spark.sql("DROP TABLE IF EXISTS training_dataset")
 
 # COMMAND ----------
 
@@ -112,13 +121,16 @@ display(enc_features_df)
 
 # COMMAND ----------
 
+from pyspark.sql import functions as F
+
 enc_features_df = compute_enc_features(spark.table('encounters'))
 training_dataset = cohort_features_df.join(labels, [labels.PATIENT==cohort_features_df.Id], "inner") \
                                      .join(enc_features_df, [labels.Id==enc_features_df.ENCOUNTER_ID], "inner") \
                                      .drop("Id", "_rescued_data", "SSN", "DRIVERS", "PASSPORT", "FIRST", "LAST", "ADDRESS", "BIRTHPLACE")
+
 ### Adding extra feature such as patient age at encounter
 training_dataset = training_dataset.withColumnRenamed("PATIENT", "patient_id") \
-                                   .withColumn("age_at_encounter", ((F.datediff(col('START'), col('BIRTHDATE'))) / 365.25))
+                                   .withColumn("age_at_encounter", ((F.datediff(F.col('START'), F.col('BIRTHDATE'))) / 365.25))
 
 training_dataset.write.mode('overwrite').saveAsTable("training_dataset")
 display(spark.table("training_dataset"))

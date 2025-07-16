@@ -1,4 +1,8 @@
 # Databricks notebook source
+# dbutils.widgets.removeAll()
+
+# COMMAND ----------
+
 dbutils.widgets.dropdown("reset_all_data", "false", ["true", "false"], "Reset all data")
 
 # COMMAND ----------

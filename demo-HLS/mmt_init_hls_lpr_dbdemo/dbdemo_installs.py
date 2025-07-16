@@ -1,5 +1,6 @@
 # Databricks notebook source
-## USE MLdbr instead!!!
+# DBTITLE 1,install on MLdbr
+## USE MLdbr 
 
 %pip install dbdemos
 
@@ -17,18 +18,13 @@ dbdemos.list_demos()
 
 # COMMAND ----------
 
+# DBTITLE 1,Specifying UC paths during demo init
 # dbdemos.install('lakehouse-hls-readmission', catalog='mmt_demos', schema='hls_readmission_dbdemoinit')
 
-# Installing demo lakehouse-hls-readmission under /Users/may.merkletan@databricks.com/REPOs/dbdemos-notebooks/demo-HLS/mmt_init_hls_lpr_dbdemo, please wait...
-# Help us improving dbdemos, share your feedback or create an issue if something isn't working: https://github.com/databricks-demos/dbdemos
-
-
 # COMMAND ----------
 
-
-
-# COMMAND ----------
-
+# DBTITLE 1,RECREATE Job Clusters!
+## does this create other job clusters too? 
 dbdemos.create_cluster('lakehouse-hls-readmission')
 
 # COMMAND ----------
@@ -60,3 +56,16 @@ dbdemos.create_cluster('lakehouse-hls-readmission')
 #         "max_workers": 10
 #     }
 # }
+
+# COMMAND ----------
+
+
+
+# COMMAND ----------
+
+# DBTITLE 1,fyi
+# dbdemos.install('lakehouse-hls-readmission', catalog='mmt_demos', schema='hls_readmission_dbdemoinit')
+
+# Installing demo lakehouse-hls-readmission under /Users/may.merkletan@databricks.com/REPOs/dbdemos-notebooks/demo-HLS/mmt_init_hls_lpr_dbdemo, please wait...
+# Help us improving dbdemos, share your feedback or create an issue if something isn't working: https://github.com/databricks-demos/dbdemos
+

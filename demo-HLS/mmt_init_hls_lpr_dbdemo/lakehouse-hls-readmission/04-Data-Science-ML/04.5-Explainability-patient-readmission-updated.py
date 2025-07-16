@@ -12,7 +12,10 @@
 # MAGIC This information can be used to improve global care but also provide more context for a specific patient.
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
-# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&org_id=1444828305810485&notebook=%2F04-Data-Science-ML%2F04.5-Explainability-patient-readmission&demo_name=lakehouse-hls-readmission&event=VIEW&path=%2F_dbdemos%2Flakehouse%2Flakehouse-hls-readmission%2F04-Data-Science-ML%2F04.5-Explainability-patient-readmission&version=1">
+# MAGIC <!-- <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&org_id=1444828305810485&notebook=%2F04-Data-Science-ML%2F04.5-Explainability-patient-readmission&demo_name=lakehouse-hls-readmission&event=VIEW&path=%2F_dbdemos%2Flakehouse%2Flakehouse-hls-readmission%2F04-Data-Science-ML%2F04.5-Explainability-patient-readmission&version=1"> -->
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&org_id=1444828305810485&notebook=%2F04-Data-Science-ML%2F04.5-Explainability-patient-readmission-updated&demo_name=lakehouse-hls-readmission&event=VIEW&path=%2F_dbdemos%2Flakehouse%2Flakehouse-hls-readmission%2F04-Data-Science-ML%2F04.5-Explainability-patient-readmission-updated&version=1">
 
 # COMMAND ----------
 
@@ -92,13 +95,13 @@ shap.summary_plot(shap_values, train_sample)
 # COMMAND ----------
 
 # DBTITLE 1,Explain risk for an individual
-# #We'll need to add shap bundle js to display nice graph
-# with open(shap.__file__[:shap.__file__.rfind('/')]+"/plots/resources/bundle.js", 'r') as file:
-#    # print(file.read())
-#    shap_bundle_js = '<script type="text/javascript">'+file.read()+'</script>'
+#We'll need to add shap bundle js to display nice graph
+with open(shap.__file__[:shap.__file__.rfind('/')]+"/plots/resources/bundle.js", 'r') as file:
+   # print(file.read())
+   shap_bundle_js = '<script type="text/javascript">'+file.read()+'</script>'
 
-# html = shap.force_plot(explainer.expected_value, shap_values[0,:], train_sample.iloc[0,:])
-
+html = shap.force_plot(explainer.expected_value, shap_values[0,:], train_sample.iloc[0,:])
+  
 # displayHTML(shap_bundle_js + html.html())
 
 # COMMAND ----------
@@ -141,6 +144,7 @@ shap.dependence_plot("INCOME", shap_values, train_sample[features], interaction_
 
 # COMMAND ----------
 
+# DBTITLE 1,original -- errored/exception
 # import pandas as pd
 # def compute_shap_values(iterator):
 #   for X in iterator:
@@ -149,7 +153,31 @@ shap.dependence_plot("INCOME", shap_values, train_sample[features], interaction_
 # df = dataset_to_explain.mapInPandas(compute_shap_values, schema=", ".join([x+"_shap_value float" for x in features]))
 
 # # Skip as this can take some time to run
-# # display(df)
+# display(df) 
+
+# COMMAND ----------
+
+# DBTITLE 1,updated
+import pandas as pd
+from pyspark.sql.functions import pandas_udf
+from pyspark.sql.types import StructType, StructField, FloatType
+
+# Define the schema for the SHAP values
+schema = StructType([StructField(f"{x}_shap_value", FloatType(), True) for x in features])
+
+# Define the function to compute SHAP values
+def compute_shap_values(iterator):
+    for X in iterator:
+        yield pd.DataFrame(
+            explainer.shap_values(X, check_additivity=False),
+            columns=[f"{x}_shap_value" for x in features]
+        )
+
+# Ensure train_sample is a PySpark DataFrame
+df = spark.createDataFrame(train_sample).mapInPandas(compute_shap_values, schema=schema)
+
+# Display the resulting DataFrame
+display(df)
 
 # COMMAND ----------
 

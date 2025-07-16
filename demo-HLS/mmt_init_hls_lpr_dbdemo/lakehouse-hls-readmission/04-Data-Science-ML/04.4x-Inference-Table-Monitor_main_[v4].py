@@ -1,8 +1,10 @@
 # Databricks notebook source
-# MAGIC %md # Inference Table Analysis Notebook
+# MAGIC %md-sandbox 
+# MAGIC
+# MAGIC # Inference Table Analysis Notebook
 # MAGIC
 # MAGIC #### About this notebook
-# MAGIC This starter notebook is intended to be used with **Databricks Model Serving** endpoints which have the *Inference Table* feature enabled.</br>
+# MAGIC This reference starter notebook is intended to be used with **Databricks Model Serving** endpoints which have the *Inference Table* feature enabled.</br>
 # MAGIC This notebook has three high-level purposes:
 # MAGIC 1. Process logged requests and responses by converting raw JSON payloads to Spark data types.
 # MAGIC 2. Join requests with relevant tables, such as labels or business metrics.
@@ -16,18 +18,37 @@
 # MAGIC Feel free to run this notebook manually to test out the parameters; when you're ready to run it in production, you can schedule it as a recurring job.</br>
 # MAGIC Note that in order to keep this notebook running smoothly and efficiently, we recommend running it at least **once a week** to keep output tables fresh and up to date.
 # MAGIC
+# MAGIC #### Dependency
+# MAGIC The refresh of this monitoring depends on the Batch Inferencing job [04.4x-Inference-Table-Monitor_Endpt2BatchProcess_mmt](https://e2-demo-field-eng.cloud.databricks.com/editor/notebooks/2683910997984525?o=1444828305810485) 
+# MAGIC NB Pausing the monitor refresh will likely also pause the inferencing job. it will also cause the streaming of the payload processing to become offset when you try to rerun/resume later but didn't start the inference job prior to running this mornitoring refresh process.   
+# MAGIC If you encounter a `[STREAM_FAILED] Query [id = #####, runId = #####] terminated with exception: [DELTA_MISSING_FILES_UNEXPECTED_VERSION]` -- try using a new checkpoint for payload streaming OR recreate the monitor with new inferences to endpoint (if you need to also update/recreate that first to start fresh) 
+# MAGIC
 # MAGIC ---    
 # MAGIC Refs: 
 # MAGIC - https://docs.databricks.com/en/machine-learning/model-serving/inference-tables.html
 # MAGIC   - https://docs.databricks.com/_extras/notebooks/source/monitoring/inference-table-monitor.html    
 # MAGIC   this template code is used in this notebook and includes the helperfuncs code in a single notebook which is split up in this walkthrough and run in the Setup section cell just below
 # MAGIC - https://docs.databricks.com/en/lakehouse-monitoring/index.html
+# MAGIC
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&org_id=1444828305810485&notebook=%2F04-Data-Science-ML%2F04.4x-Inference-Table-Monitor_main_[v3]&demo_name=lakehouse-hls-readmission&event=VIEW&path=%2F_dbdemos%2Flakehouse%2Flakehouse-hls-readmission%2F04-Data-Science-ML%2F04.4x-Inference-Table-Monitor_main_[v3]&version=1">
 
 # COMMAND ----------
 
 # MAGIC %md
 # MAGIC ## Setup: Install SDK + Initialize HelperFunctions  
 # MAGIC
+
+# COMMAND ----------
+
+pip install mlflow==2.19.0
+
+# COMMAND ----------
+
+# MAGIC %pip install databricks-sdk --upgrade
+# MAGIC
+# MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
@@ -69,7 +90,7 @@ from pyspark.sql import functions as F, types as T
 """
 Required parameters in order to run this notebook.
 """
-ENDPOINT_NAME = 'dbdemos_hls_pr_endpoint_v2'  ## 2update     # Name of the model serving endpoint
+ENDPOINT_NAME = 'dbdemos_hls_pr_endpoint_v4'  ## 2update     # Name of the model serving endpoint
 PROBLEM_TYPE = 'classification'                              # ML problem type, one of "classification"/"regression"
 
 # Validate that all required inputs have been provided
@@ -170,6 +191,14 @@ PROCESSING_WINDOW_DAYS = 365
 
 # COMMAND ----------
 
+# Set the registry URI to access models in Unity Catalog
+mlflow.set_registry_uri('databricks-uc')
+
+# Previously Defined (above) the ENDPOINT_NAME variable
+# ENDPOINT_NAME = "dbdemos_hls_pr_endpoint_v4"
+
+# COMMAND ----------
+
 # Enable automatic schema evolution if we decide to add columns later.
 spark.conf.set("spark.databricks.delta.schema.autoMerge.enabled", True)
 
@@ -193,8 +222,13 @@ if REQUEST_FIELDS is None or RESPONSE_FIELD is None:
 
 # COMMAND ----------
 
+ENDPOINT_NAME
+# https://e2-demo-field-eng.cloud.databricks.com/serving-endpoints/dbdemos_hls_pr_endpoint_v4/invocations
+
+# COMMAND ----------
+
 # DBTITLE 1,[illustrate] inferring model signature
-# inferred_request_fields, inferred_response_field = infer_request_response_fields(endpoint_name=ENDPOINT_NAME)
+inferred_request_fields, inferred_response_field = infer_request_response_fields(endpoint_name=ENDPOINT_NAME)
 
 # COMMAND ----------
 
@@ -276,6 +310,10 @@ display(pd.DataFrame({
 
 # COMMAND ----------
 
+inference_table_config
+
+# COMMAND ----------
+
 # DBTITLE 1,drop UC Vol if recreating
 # spark.sql(f"drop Volume if exists {inference_table_config.catalog}.{inference_table_config.schema}.`payload-logging`;")
 
@@ -285,6 +323,17 @@ display(pd.DataFrame({
 # CREATE VOLUME IF NOT EXISTS <catalog>.<schema>.<volume-name>;
 
 spark.sql(f"CREATE VOLUME IF NOT EXISTS {inference_table_config.catalog}.{inference_table_config.schema}.`payload-logging`;")
+
+# COMMAND ----------
+
+# DBTITLE 1,increase delta.logRetentionDuration
+# new_duration = '90 days'
+# spark.sql(f"""
+# ALTER TABLE {payload_table_name}
+# SET TBLPROPERTIES (
+#   'delta.logRetentionDuration' = '{new_duration}'
+# )
+# """)
 
 # COMMAND ----------
 
@@ -305,7 +354,7 @@ if FILTER_EXP is not None:
 
 # Initialize the processed requests table so we can enable CDF and reader/writer versions for compatibility.
 initialize_table(
-    fully_qualified_table_name=unpacked_requests_table_name,
+    fully_qualified_table_name=unpacked_requests_table_name, ## name updated from v2 to v2b 
     schema=requests_unpacked.schema,
     special_char_compatible=SPECIAL_CHAR_COMPATIBLE,
 )
@@ -315,7 +364,7 @@ initialize_table(
 checkpoint_path = f"/Volumes/{inference_table_config.catalog}/{inference_table_config.schema}/payload-logging/{ENDPOINT_NAME}/checkpoint" ## updated to use Volumes mmt 2024Oct
 
 
-## updated mmt--2024Oct
+## updated mmt--2024Oct | 2024Dec | Apr 2025
 # Placeholder for schema adjustment if necessary
 # Ensure requests_unpacked does not have duplicate or conflicting fields
 # This might involve renaming columns or selecting specific columns
@@ -328,6 +377,7 @@ requests_stream = (requests_unpacked.writeStream
                     .outputMode("append") 
                     .option("checkpointLocation", checkpoint_path) 
                     .option("mergeSchema", "true") # Enable schema evolution
+                    .option("failOnDataLoss", "false") ## 
                     .toTable(unpacked_requests_table_name)
                     )
     
@@ -336,11 +386,66 @@ requests_stream.awaitTermination()
 
 # COMMAND ----------
 
+unpacked_requests_table_name
+
+# COMMAND ----------
+
+# DBTITLE 1,test
+# # Read the requests as a stream so we can incrementally process them.
+# requests_raw = read_requests_as_stream(fully_qualified_table_name=payload_table_name)
+
+# # Unpack the requests.
+# requests_unpacked = process_requests(
+#     requests_raw=requests_raw,
+#     request_fields=REQUEST_FIELDS,
+#     response_field=RESPONSE_FIELD,
+# )
+
+# # Filter the requests if an expression was provided.
+# if FILTER_EXP is not None:
+#     requests_unpacked = requests_unpacked.filter(FILTER_EXP)
+
+# # Initialize the processed requests table so we can enable CDF and reader/writer versions for compatibility.
+# initialize_table(
+#     fully_qualified_table_name=unpacked_requests_table_name,
+#     schema=requests_unpacked.schema,
+#     special_char_compatible=SPECIAL_CHAR_COMPATIBLE,
+# )
+
+# # Persist the requests stream, with a defined checkpoint path for this table.
+# # checkpoint_path = f"dbfs:/payload-logging/{ENDPOINT_NAME}/checkpoint" # original using dbfs
+# checkpoint_path = f"/Volumes/{inference_table_config.catalog}/{inference_table_config.schema}/payload-logging/{ENDPOINT_NAME}/checkpoint" ## updated to use Volumes mmt 2024Oct
+
+# ## updated mmt--2024Oct
+# # Placeholder for schema adjustment if necessary
+# # Ensure requests_unpacked does not have duplicate or conflicting fields
+# # This might involve renaming columns or selecting specific columns
+
+# # Enable schema evolution on the write operation
+# requests_stream = (requests_unpacked.writeStream 
+#                     .trigger(once=True) 
+#                     .format("delta") 
+#                     .partitionBy(DATE_COL) 
+#                     .outputMode("append") 
+#                     .option("checkpointLocation", checkpoint_path) 
+#                     .option("mergeSchema", "true") # Enable schema evolution
+#                     .option("failOnDataLoss", "false")
+#                     .toTable(unpacked_requests_table_name)
+#                     )
+    
+# requests_stream.awaitTermination()
+
+# COMMAND ----------
+
 # display(requests_raw)
 
 # COMMAND ----------
 
 # display(requests_unpacked)
+
+# COMMAND ----------
+
+# display(requests_unpacked.select(F.min('__db_date'), F.max('__db_date')))
 
 # COMMAND ----------
 
@@ -431,20 +536,20 @@ processed_requests_delta_table.alias("existing") \
 # COMMAND ----------
 
 # DBTITLE 1,check
-display(requests_cleaned)
+# display(requests_cleaned)
 
 # COMMAND ----------
 
 # DBTITLE 1,check counts/nulls
-# display(requests_cleaned.groupby("30_DAY_READMISSION").agg(F.count('predictions')))
-# display(requests_cleaned.groupby("predictions").agg(F.count('predictions')))
-# display(requests_cleaned.groupby("30_DAY_READMISSION","predictions").agg(F.count('predictions')).sort('30_DAY_READMISSION') )
+display(requests_cleaned.groupby("30_DAY_READMISSION").agg(F.count('predictions')))
+display(requests_cleaned.groupby("predictions").agg(F.count('predictions')))
+display(requests_cleaned.groupby("30_DAY_READMISSION","predictions").agg(F.count('predictions')).sort('30_DAY_READMISSION') )
 
 # COMMAND ----------
 
 # DBTITLE 1,check flattened+joined inference_[v#]_processed
-print(processed_requests_table_name)
-testdf = spark.table(processed_requests_table_name)
+# print(processed_requests_table_name)
+# testdf = spark.table(processed_requests_table_name)
 
 # COMMAND ----------
 
@@ -475,86 +580,188 @@ w = WorkspaceClient()
 
 # COMMAND ----------
 
-# DBTITLE 1,Set up to Monitor flattened inference_processed
+# DBTITLE 1,SetUp | Update Monitor flattened inference_processed
+# # Use the catalog/schema of the payload table as the output schema.
+# output_schema_name = f"{inference_table_config.catalog}.{inference_table_config.schema}"
+# username = spark.sql("SELECT current_user()").first()["current_user()"]
+# assets_dir = f"/Workspace/Users/{username}/databricks_lakehouse_monitoring/{processed_requests_table_name}"
+
+# print(output_schema_name, username, assets_dir)
+
+# try:
+#     info = w.quality_monitors.create(
+#         table_name=processed_requests_table_name,
+#         inference_log=MonitorInferenceLog(
+#             timestamp_col=TIMESTAMP_COL,
+#             granularities=GRANULARITIES,
+#             model_id_col=MODEL_ID_COL,
+#             prediction_col=PREDICTION_COL,
+#             label_col=LABEL_COL,
+#             problem_type=MonitorInferenceLogProblemType.PROBLEM_TYPE_CLASSIFICATION if PROBLEM_TYPE == "classification" else MonitorInferenceLogProblemType.PROBLEM_TYPE_REGRESSION,
+#         ),
+#         output_schema_name=output_schema_name,
+#         schedule=None,  # We will refresh the profile/drift metrics on-demand in this notebook
+#         baseline_table_name=BASELINE_TABLE,
+#         slicing_exprs=SLICING_EXPRS,
+#         custom_metrics=CUSTOM_METRICS,
+#         assets_dir=assets_dir
+#     )
+#     print(info)
+# except Exception as e:
+#     # Ensure the exception was expected
+#     if "RESOURCE_ALREADY_EXISTS" in str(e) or "limit: 1000" in str(e):
+#         print(f"Expected error: {e}")
+#         # Update the monitor if any parameters of this notebook have changed.
+#         w.quality_monitors.update(
+#             table_name=processed_requests_table_name,
+#             inference_log=MonitorInferenceLog(
+#                 timestamp_col=TIMESTAMP_COL,
+#                 granularities=GRANULARITIES,
+#                 model_id_col=MODEL_ID_COL,
+#                 prediction_col=PREDICTION_COL,
+#                 label_col=LABEL_COL,
+#                 problem_type=MonitorInferenceLogProblemType.PROBLEM_TYPE_CLASSIFICATION if PROBLEM_TYPE == "classification" else MonitorInferenceLogProblemType.PROBLEM_TYPE_REGRESSION,
+#             ),
+#             output_schema_name=output_schema_name,
+#             schedule=None,  # We will refresh the profile/drift metrics on-demand in this notebook
+#             baseline_table_name=BASELINE_TABLE,
+#             slicing_exprs=SLICING_EXPRS,
+#             custom_metrics=CUSTOM_METRICS,
+#         )
+
+#         # Refresh metrics calculated on the requests table.
+#         refresh_info = w.quality_monitors.run_refresh(table_name=processed_requests_table_name)
+#         print(refresh_info)
+#     else:
+#         raise e
+
+# COMMAND ----------
+
+LABEL_COL
+
+# COMMAND ----------
+
+# DBTITLE 1,LABEL_COL / predictions are T.DoubleType()
+# from pyspark.sql.functions import col
+
+# # Assuming `processed_requests_df` is your DataFrame
+# processed_requests_df = spark.table(processed_requests_table_name)
+
+# # Cast the label column to DOUBLE 
+# processed_requests_df = processed_requests_df.withColumn(LABEL_COL, col(LABEL_COL).cast("DOUBLE"))
+
+# # Ensure all columns have the correct data types
+# for field in processed_requests_df.schema.fields:
+#     processed_requests_df = processed_requests_df.withColumn(field.name, col(field.name).cast(field.dataType))
+
+# # Drop the existing table if it exists
+# # spark.sql(f"DROP TABLE IF EXISTS {processed_requests_table_name}")
+
+# # Save the modified DataFrame back to the table
+# processed_requests_df.write.mode("overwrite").saveAsTable(processed_requests_table_name)
+
+# # Proceed with the rest of your code
+# output_schema_name = f"{inference_table_config.catalog}.{inference_table_config.schema}"
+# username = spark.sql("SELECT current_user()").first()["current_user()"]
+# assets_dir = f"/Workspace/Users/{username}/databricks_lakehouse_monitoring/{processed_requests_table_name}"
+
+# print(output_schema_name, username, assets_dir)
+
+# COMMAND ----------
+
+# DBTITLE 1,SetUp | Update Monitor flattened inference_processed
 # Use the catalog/schema of the payload table as the output schema.
 output_schema_name = f"{inference_table_config.catalog}.{inference_table_config.schema}"
 username = spark.sql("SELECT current_user()").first()["current_user()"]
-assets_dir = f"/Workspace/Users/{username}/databricks_lakehouse_monitoring/{processed_requests_table_name}" ##
+assets_dir = f"/Workspace/Users/{username}/databricks_lakehouse_monitoring/{processed_requests_table_name}"
 
 print(output_schema_name, username, assets_dir)
 
 try:
-    info = w.quality_monitors.create(
-        table_name=processed_requests_table_name,
-        inference_log=MonitorInferenceLog(
-            timestamp_col=TIMESTAMP_COL,
-            granularities=GRANULARITIES,
-            model_id_col=MODEL_ID_COL,
-            prediction_col=PREDICTION_COL,
-            label_col=LABEL_COL,
-            problem_type=MonitorInferenceLogProblemType.PROBLEM_TYPE_CLASSIFICATION if PROBLEM_TYPE == "classification" else MonitorInferenceLogProblemType.PROBLEM_TYPE_REGRESSION,
-        ),
-        output_schema_name=output_schema_name,
-        schedule=None,  # We will refresh the profile/drift metrics on-demand in this notebook ##
-        # schedule=MonitorCronSchedule(quartz_cron_expression="0 0 12 * * ?",  # schedules a refresh every day at 12 noon
-        #                              timezone_id="PST"
-        #                             ),
-        # notifications=MonitorNotifications(
-        #                                     on_failure=MonitorDestination(email_addresses=["your_email@domain.com"])
-        #                                   ),
-        baseline_table_name=BASELINE_TABLE,
-        slicing_exprs=SLICING_EXPRS,
-        custom_metrics=CUSTOM_METRICS,
-        assets_dir=assets_dir
-    )
-    print(info)
+    # Check if the monitor already exists
+    existing_monitor = w.quality_monitors.get(table_name=processed_requests_table_name)
+    if existing_monitor:
+        print(f"Monitor already exists: {existing_monitor}")
+        # Refresh metrics calculated on the requests table.
+        refresh_info = w.quality_monitors.run_refresh(table_name=processed_requests_table_name)
+        print(refresh_info)
+    else:
+        raise Exception("Monitor does not exist and cannot be found.")
 except Exception as e:
-    # Ensure the exception was expected
-    # assert "RESOURCE_ALREADY_EXISTS" in str(e), f"Unexpected error: {e}"    
-    assert "already exists" in str(e), f"Unexpected error: {e}" ## mmt updated 2024Oct
-    
-    # Update the monitor if any parameters of this notebook have changed.
-    w.quality_monitors.update(
-        table_name=processed_requests_table_name,
-        inference_log=MonitorInferenceLog(
-            timestamp_col=TIMESTAMP_COL,
-            granularities=GRANULARITIES,
-            model_id_col=MODEL_ID_COL,
-            prediction_col=PREDICTION_COL,
-            label_col=LABEL_COL,
-            problem_type=MonitorInferenceLogProblemType.PROBLEM_TYPE_CLASSIFICATION if PROBLEM_TYPE == "classification" else MonitorInferenceLogProblemType.PROBLEM_TYPE_REGRESSION,
-        ),
-        output_schema_name=output_schema_name,
-        schedule=None, # We will refresh the profile/drift metrics on-demand in this notebook ##
-        # schedule=MonitorCronSchedule(quartz_cron_expression="0 0 12 * * ?",  # schedules a refresh every day at 12 noon
-        #                              timezone_id="PST"
-        #                             ),
-        # notifications=MonitorNotifications(
-        #                                     on_failure=MonitorDestination(email_addresses=["your_email@domain.com"])
-        #                                   ),
-        baseline_table_name=BASELINE_TABLE,
-        slicing_exprs=SLICING_EXPRS,
-        custom_metrics=CUSTOM_METRICS,
-    )
+    if "RESOURCE_ALREADY_EXISTS" in str(e) or "limit: 1000" in str(e):
+        print(f"Expected error: {e}")
+        # Update the monitor if any parameters of this notebook have changed.
+        w.quality_monitors.update(
+            table_name=processed_requests_table_name,
+            inference_log=MonitorInferenceLog(
+                timestamp_col=TIMESTAMP_COL,
+                granularities=GRANULARITIES,
+                model_id_col=MODEL_ID_COL,
+                prediction_col=PREDICTION_COL,
+                label_col=LABEL_COL,
+                problem_type=MonitorInferenceLogProblemType.PROBLEM_TYPE_CLASSIFICATION if PROBLEM_TYPE == "classification" else MonitorInferenceLogProblemType.PROBLEM_TYPE_REGRESSION,
+            ),
+            output_schema_name=output_schema_name,
+            schedule=None,  # We will refresh the profile/drift metrics on-demand in this notebook
+            # schedule=MonitorCronSchedule(quartz_cron_expression="0 0 12 * * ?",  # schedules a refresh every day at 12 noon
+            #                              timezone_id="PST"
+            #                             ),
+            # notifications=MonitorNotifications(
+            #                                     on_failure=MonitorDestination(email_addresses=["your_email@domain.com"])
+            #                                   ),
+            baseline_table_name=BASELINE_TABLE,
+            slicing_exprs=SLICING_EXPRS,
+            custom_metrics=CUSTOM_METRICS,
+        )
 
-    # Refresh metrics calculated on the requests table.
-    refresh_info = w.quality_monitors.run_refresh(table_name=processed_requests_table_name)
-    print(refresh_info)
+        # Refresh metrics calculated on the requests table.
+        refresh_info = w.quality_monitors.run_refresh(table_name=processed_requests_table_name)
+        print(refresh_info)
+    else:
+        # If the monitor does not exist, create it
+        info = w.quality_monitors.create(
+            table_name=processed_requests_table_name,
+            inference_log=MonitorInferenceLog(
+                timestamp_col=TIMESTAMP_COL,
+                granularities=GRANULARITIES,
+                model_id_col=MODEL_ID_COL,
+                prediction_col=PREDICTION_COL,
+                label_col=LABEL_COL,
+                problem_type=MonitorInferenceLogProblemType.PROBLEM_TYPE_CLASSIFICATION if PROBLEM_TYPE == "classification" else MonitorInferenceLogProblemType.PROBLEM_TYPE_REGRESSION,
+            ),
+            output_schema_name=output_schema_name,
+            schedule=None,  # We will refresh the profile/drift metrics on-demand in this notebook
+        )
+        print(info)
 
 # COMMAND ----------
 
-# refresh_id = "330830619290446"  # Replace with your actual refresh ID
-# # Replace these with your actual catalog, schema, and table name
-# catalog = "mmt_demos"
-# schema = "hls_readmission_dbdemoinit"
-# table_name = 'inference_processed'
-# full_table_name = f"{catalog}.{schema}.{table_name}"
+# DBTITLE 1,NOTEs
+## avoid using API calls 
 
-# cancel_info = w.quality_monitors.cancel_refresh(
-#     table_name=full_table_name,
-#     refresh_id=refresh_id
-# )
-# # display(cancel_info)
+# COMMAND ----------
+
+# DBTITLE 1,Display Dashboard Link
+# Define the URL of the Lakehouse Monitoring dashboard
+lakehouse_monitoring_dashboard_url = "https://e2-demo-field-eng.cloud.databricks.com/dashboardsv3/01f0244f39141b999c470ad5a70afe35/published?o=1444828305810485"
+
+# Create the HTML link
+html_link = f'<a href="{lakehouse_monitoring_dashboard_url}" target="_blank">Lakehouse Monitoring Dashboard</a>'
+
+# Display the HTML link in the notebook cell
+displayHTML(html_link)
+
+# COMMAND ----------
+
+# DBTITLE 0,Link to Dashboard
+# # Define the URL of the dashboard
+# dashboard_url = "https://e2-demo-field-eng.cloud.databricks.com/sql/dashboardsv3/01efb5dd287614feb2e4ecbb6e3dc89c?o=1444828305810485"
+
+# # Create the iframe HTML code
+# iframe_code = f'<iframe src="{dashboard_url}" width="100%" height="600px"></iframe>'
+
+# # Display the iframe in the notebook cell
+# displayHTML(iframe_code)
 
 # COMMAND ----------
 

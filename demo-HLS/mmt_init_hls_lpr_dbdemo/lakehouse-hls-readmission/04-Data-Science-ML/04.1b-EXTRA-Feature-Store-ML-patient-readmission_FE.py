@@ -31,7 +31,10 @@
 # MAGIC For more details about Databricks Feature Store, run `dbdemos.install('feature-store')`
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
-# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&org_id=1444828305810485&notebook=%2F04-Data-Science-ML%2F04.6-EXTRA-Feature-Store-ML-patient-readmission&demo_name=lakehouse-hls-readmission&event=VIEW&path=%2F_dbdemos%2Flakehouse%2Flakehouse-hls-readmission%2F04-Data-Science-ML%2F04.6-EXTRA-Feature-Store-ML-patient-readmission&version=1">
+# MAGIC <!-- <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&org_id=1444828305810485&notebook=%2F04-Data-Science-ML%2F04.6-EXTRA-Feature-Store-ML-patient-readmission&demo_name=lakehouse-hls-readmission&event=VIEW&path=%2F_dbdemos%2Flakehouse%2Flakehouse-hls-readmission%2F04-Data-Science-ML%2F04.6-EXTRA-Feature-Store-ML-patient-readmission&version=1"> -->
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&org_id=1444828305810485&notebook=%2F04-Data-Science-ML%2F04.1b-EXTRA-Feature-Store-ML-patient-readmission_FE&demo_name=lakehouse-hls-readmission&event=VIEW&path=%2F_dbdemos%2Flakehouse%2Flakehouse-hls-readmission%2F04-Data-Science-ML%2F04.1b-EXTRA-Feature-Store-ML-patient-readmission_FE&version=1">
 
 # COMMAND ----------
 
@@ -77,7 +80,7 @@ pat_features_df.display()
 # COMMAND ----------
 
 # DBTITLE 1,to-update!
-## this needs to be updated with feature.engineering 
+## this nb has been updated with feature.engineering 
 # https://docs.databricks.com/en/machine-learning/feature-store/uc/feature-tables-uc.html#language-Python
 
 # from databricks.feature_engineering import FeatureEngineeringClient ## might need to check/update the configs

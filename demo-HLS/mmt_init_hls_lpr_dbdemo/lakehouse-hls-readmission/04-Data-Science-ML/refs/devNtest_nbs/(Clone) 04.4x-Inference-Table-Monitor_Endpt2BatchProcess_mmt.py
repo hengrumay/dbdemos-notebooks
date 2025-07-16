@@ -23,7 +23,7 @@ import random
 # DBTITLE 1,UC/endpoint variables
 catalog, db, model_name = "mmt_demos.hls_readmission_dbdemoinit.dbdemos_hls_pr".split('.')
 catalog, db, model_name
-# serving_endpoint_name = "dbdemos_hls_pr_endpoint_v4" ## 
+# serving_endpoint_name = "dbdemos_hls_pr_endpoint_v2" ## 
 
 # COMMAND ----------
 
@@ -143,7 +143,9 @@ def create_tf_serving_json(data):
     return {'inputs': {name: data[name].tolist() for name in data.keys()} if isinstance(data, dict) else data.tolist()}
         
 def score_model(dataset, access_token):
-    url = 'https://e2-demo-field-eng.cloud.databricks.com/serving-endpoints/dbdemos_hls_pr_endpoint_v4/invocations'
+    # url = f'https://e2-demo-field-eng.cloud.databricks.com/serving-endpoints/{serving_endpoint_name}/invocations'
+    # url = 'https://e2-demo-field-eng.cloud.databricks.com/serving-endpoints/dbdemos_hls_pr_endpoint_v2/invocations'
+    url = 'https://e2-demo-field-eng.cloud.databricks.com/serving-endpoints/dbdemos_hls_pr_endpoint_v3/invocations'
 
     # Include the access token in the request headers
     headers = {"Authorization": f"Bearer {access_token}","Content-Type": "application/json"}
@@ -194,15 +196,10 @@ display(df)
 
 # DBTITLE 1,Save as inference_[v#]_groundtruth
 
-df.write.format("delta").mode("append").saveAsTable(f"{catalog}.{db}.inference_v4_batchpredictions", mergeSchema=True)
+df.write.format("delta").mode("append").saveAsTable(f"{catalog}.{db}.inference_v2_batchpredictions", mergeSchema=True)
 
 # COMMAND ----------
 
-
-
-# COMMAND ----------
-
-# DBTITLE 1,PREVIOUS
 # spark.sql(f""" Drop table if exists {catalog}.{db}.inference_baseline; """)
 # spark.sql(f""" Drop table if exists {catalog}.{db}.inference_v2_baseline; """)
 # spark.sql(f"drop table if exists {catalog}.{db}.inference_v2_groundtruth")

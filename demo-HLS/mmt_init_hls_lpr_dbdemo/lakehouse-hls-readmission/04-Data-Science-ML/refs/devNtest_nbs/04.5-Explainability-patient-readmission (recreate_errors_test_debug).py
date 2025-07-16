@@ -12,7 +12,7 @@
 # MAGIC This information can be used to improve global care but also provide more context for a specific patient.
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
-# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&org_id=1444828305810485&notebook=%2F04-Data-Science-ML%2F04.5-Explainability-patient-readmission&demo_name=lakehouse-hls-readmission&event=VIEW&path=%2F_dbdemos%2Flakehouse%2Flakehouse-hls-readmission%2F04-Data-Science-ML%2F04.5-Explainability-patient-readmission&version=1">
+# MAGIC <!-- <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&org_id=1444828305810485&notebook=%2F04-Data-Science-ML%2F04.5-Explainability-patient-readmission&demo_name=lakehouse-hls-readmission&event=VIEW&path=%2F_dbdemos%2Flakehouse%2Flakehouse-hls-readmission%2F04-Data-Science-ML%2F04.5-Explainability-patient-readmission&version=1"> -->
 
 # COMMAND ----------
 
@@ -60,6 +60,7 @@ mlflow.autolog(disable=True)
 mlflow.sklearn.autolog(disable=True)
 
 df = dataset_to_explain.sample(fraction=0.1).toPandas()
+model = mlflow.pyfunc.load_model(model_uri=f"models:/{catalog}.{db}.dbdemos_hls_pr@prod")
 
 train_sample = df[features].sample(n=np.minimum(100, df.shape[0]), random_state=42)
 
@@ -91,10 +92,6 @@ shap.summary_plot(shap_values, train_sample)
 
 # COMMAND ----------
 
-# shap.initjs() 
-
-# COMMAND ----------
-
 # DBTITLE 1,Explain risk for an individual
 #We'll need to add shap bundle js to display nice graph
 with open(shap.__file__[:shap.__file__.rfind('/')]+"/plots/resources/bundle.js", 'r') as file:
@@ -107,7 +104,28 @@ displayHTML(shap_bundle_js + html.html())
 
 # COMMAND ----------
 
+shap.__file__[:shap.__file__.rfind('/')]+"/plots/resources/bundle.js"
+
+# COMMAND ----------
+
+# shap.initjs() 
+
+# COMMAND ----------
+
+!ls '/databricks/python/lib/python3.11/site-packages/shap/plots/resources/'
+
+# COMMAND ----------
+
+!cat '/databricks/python/lib/python3.11/site-packages/shap/plots/resources/bundle.js' 
+
+# COMMAND ----------
+
 html
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC
 
 # COMMAND ----------
 
@@ -168,46 +186,43 @@ shap.dependence_plot("INCOME", shap_values, train_sample[features], interaction_
 # COMMAND ----------
 
 # DBTITLE 1,original
-# import pandas as pd
-# def compute_shap_values(iterator):
-#   for X in iterator:
-#     yield pd.DataFrame(explainer.shap_values(X, check_additivity=False))
+import pandas as pd
+def compute_shap_values(iterator):
+  for X in iterator:
+    yield pd.DataFrame(explainer.shap_values(X, check_additivity=False))
 
-# df = dataset_to_explain.mapInPandas(compute_shap_values, schema=", ".join([x+"_shap_value float" for x in features]))
+df = dataset_to_explain.mapInPandas(compute_shap_values, schema=", ".join([x+"_shap_value float" for x in features]))
 
-# # Skip as this can take some time to run
-# # display(df)
-
-# COMMAND ----------
-
-# DBTITLE 1,to-test
-# def calculate_shap(iterator: Iterator[pd.DataFrame]) -> Iterator[pd.DataFrame]:
-#     for X in iterator:
-#         yield pd.DataFrame(
-#             explainer.shap_values(np.array(X), check_additivity=False)[0],
-#             columns=columns_for_shap_calculation,
-#         )
-
-# return_schema = StructType()
-# for feature in columns_for_shap_calculation:
-#     return_schema = return_schema.add(StructField(feature, FloatType()))
-
-# shap_values = df.mapInPandas(calculate_shap, schema=return_schema)
+# Skip as this can take some time to run
+display(df)
 
 # COMMAND ----------
 
-# from pyspark.sql.functions import col
+# DBTITLE 1,test
+import pandas as pd
+from pyspark.sql.functions import pandas_udf
+from pyspark.sql.types import StructType, StructField, FloatType
 
-# # Assuming compute_shap_values is correctly defined and 'features' is a list of column names
-# selected_columns = [col(feature) for feature in features]
-# schema = ", ".join([f"{x}_shap_value float" for x in features])
+# Define the schema for the SHAP values
+schema = StructType([StructField(f"{x}_shap_value", FloatType(), True) for x in features])
 
-# # Corrected code
-# display(dataset_to_explain.limit(10).select(*selected_columns).mapInPandas(compute_shap_values, schema=schema))
+# Define the function to compute SHAP values
+def compute_shap_values(iterator):
+    for X in iterator:
+        yield pd.DataFrame(
+            explainer.shap_values(X, check_additivity=False),
+            columns=[f"{x}_shap_value" for x in features]
+        )
+
+# Ensure train_sample is a PySpark DataFrame
+df = spark.createDataFrame(train_sample).mapInPandas(compute_shap_values, schema=schema)
+
+# Display the resulting DataFrame
+display(df)
 
 # COMMAND ----------
 
-display(dataset_to_explain)
+train_sample
 
 # COMMAND ----------
 

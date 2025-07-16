@@ -107,9 +107,9 @@
 -- COMMAND ----------
 
 -- MAGIC %md 
+-- MAGIC <!-- https://e2-demo-field-eng.cloud.databricks.com/pipelines/b11d2be7-99d7-40c0-8fb7-61bb497b1cba/updates/cb075167-8ac0-4ed3-a281-12fa190b807f?o=1444828305810485 -->
 -- MAGIC
--- MAGIC
--- MAGIC The DLT pipeline was started for you! Click to <a dbdemos-pipeline-id="dlt-patient-readmission" href="#joblist/pipelines/a0a5135e-8cdd-4894-ae9b-e3a24cd8672e" target="_blank">open your Pipeline</a> and review its execution.
+-- MAGIC The DLT pipeline was started for you! Click to <a dbdemos-pipeline-id="dlt-patient-readmission" href="#joblist/pipelines/b11d2be7-99d7-40c0-8fb7-61bb497b1cba" target="_blank">open your Pipeline</a> and review its execution.
 
 -- COMMAND ----------
 
@@ -708,7 +708,7 @@ CREATE OR REFRESH LIVE TABLE drug_exposure AS
 -- MAGIC
 -- MAGIC Now that these tables are available in our Lakehouse, let's review how we can share them with the Data Scientists and Data Analysts teams.
 -- MAGIC
--- MAGIC Open the <a dbdemos-pipeline-id="dlt-patient-readmission" href="#joblist/pipelines/a0a5135e-8cdd-4894-ae9b-e3a24cd8672e" target="_blank">OMOP data model Delta Live Table pipeline</a> and click on start to visualize your lineage and consume the new data incrementally!
+-- MAGIC Open the <a dbdemos-pipeline-id="dlt-patient-readmission" href="#joblist/pipelines/b11d2be7-99d7-40c0-8fb7-61bb497b1cba" target="_blank">OMOP data model Delta Live Table pipeline</a> and click on start to visualize your lineage and consume the new data incrementally!
 
 -- COMMAND ----------
 

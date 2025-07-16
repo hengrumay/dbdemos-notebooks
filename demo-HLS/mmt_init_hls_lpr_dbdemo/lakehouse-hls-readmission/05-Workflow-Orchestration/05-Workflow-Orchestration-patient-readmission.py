@@ -55,7 +55,9 @@
 # MAGIC   * Start the autoML run and deploy it
 # MAGIC   * Run inferences in a batch to score our entire dataset
 # MAGIC
-# MAGIC <a dbdemos-workflow-id="init-job" href="/#job/843915554209512">Click here to access your Workflow job</a>, it was setup when you installed your demo.
+# MAGIC <!-- https://e2-demo-field-eng.cloud.databricks.com/jobs/376192412477892/runs?o=1444828305810485 -->
+# MAGIC
+# MAGIC <a dbdemos-workflow-id="init-job" href="/#job/376192412477892/" target="_blank">Click here to access your Workflow job</a>, it was setup when you installed your demo.
 # MAGIC
 # MAGIC <img src="https://github.com/databricks-demos/dbdemos-resources/blob/main/images/hls/patient-readmission/lakehouse-hls-readmission-job-4.png?raw=true" />
 

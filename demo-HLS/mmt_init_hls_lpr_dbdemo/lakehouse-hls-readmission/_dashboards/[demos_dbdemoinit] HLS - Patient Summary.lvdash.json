@@ -1,0 +1,564 @@
+{
+  "datasets" : [ {
+    "name" : "3e00a0f3",
+    "displayName" : "dbdemos HLS - Patients by State",
+    "query" : "-- [original title] Map - dbdemos HLS - Patients by State\n\nSELECT NVL(state, 'XX' ) state_abbr, \n    count(*) as Num_Persons_count\nfrom `mmt_demos`.`hls_readmission_dbdemoinit`.patients p\nWHERE p.BIRTHDATE BETWEEN :start_date AND :end_date\nGROUP BY state_abbr\nORDER BY 1;",
+    "parameters" : [ {
+      "displayName" : "start_date",
+      "keyword" : "start_date",
+      "dataType" : "DATE",
+      "defaultSelection" : {
+        "values" : {
+          "dataType" : "DATE",
+          "values" : [ {
+            "value" : "2018-04-01T00:00:00.000"
+          } ]
+        }
+      }
+    }, {
+      "displayName" : "end_date",
+      "keyword" : "end_date",
+      "dataType" : "DATE",
+      "defaultSelection" : {
+        "values" : {
+          "dataType" : "DATE",
+          "values" : [ {
+            "value" : "2024-04-25T00:00:00.000"
+          } ]
+        }
+      }
+    } ]
+  }, {
+    "name" : "c53be963",
+    "displayName" : "dbdemos HLS - patient summary",
+    "query" : "SELECT c.concept_name gender, p.day_of_birth, p.month_of_birth, p.year_of_birth, COUNT(person_id) AS num_persons_count\nFROM `mmt_demos`.`hls_readmission_dbdemoinit`.person p\nLEFT JOIN `mmt_demos`.`hls_readmission_dbdemoinit`.concept c ON c.concept_id = p.gender_concept_id\nWHERE birth_datetime BETWEEN :start_date AND :end_date \nGROUP BY c.concept_name, p.day_of_birth, p.month_of_birth, p.year_of_birth\nORDER BY p.year_of_birth ASC",
+    "parameters" : [ {
+      "displayName" : "start_date",
+      "keyword" : "start_date",
+      "dataType" : "DATE",
+      "defaultSelection" : {
+        "values" : {
+          "dataType" : "DATE",
+          "values" : [ {
+            "value" : "2021-04-01T00:00:00.000"
+          } ]
+        }
+      }
+    }, {
+      "displayName" : "end_date",
+      "keyword" : "end_date",
+      "dataType" : "DATE",
+      "defaultSelection" : {
+        "values" : {
+          "dataType" : "DATE",
+          "values" : [ {
+            "value" : "2024-04-29T00:00:00.000"
+          } ]
+        }
+      }
+    } ]
+  }, {
+    "name" : "4b60505f",
+    "displayName" : "dbdemos HLS - Total Patients",
+    "query" : "SELECT COUNT(person_id) AS num_persons_count\nFROM `mmt_demos`.`hls_readmission_dbdemoinit`.person\nWHERE birth_datetime BETWEEN :start_date AND :end_date",
+    "parameters" : [ {
+      "displayName" : "start_date",
+      "keyword" : "start_date",
+      "dataType" : "DATE",
+      "defaultSelection" : {
+        "values" : {
+          "dataType" : "DATE",
+          "values" : [ {
+            "value" : "2021-04-01T00:00:00.000"
+          } ]
+        }
+      }
+    }, {
+      "displayName" : "end_date",
+      "keyword" : "end_date",
+      "dataType" : "DATE",
+      "defaultSelection" : {
+        "values" : {
+          "dataType" : "DATE",
+          "values" : [ {
+            "value" : "2024-04-29T00:00:00.000"
+          } ]
+        }
+      }
+    } ]
+  }, {
+    "name" : "45dec363",
+    "displayName" : "all_visits",
+    "query" : "select * from `mmt_demos`.`hls_readmission_dbdemoinit`.`all_visits` limit 100;"
+  }, {
+    "name" : "fc1f522a",
+    "displayName" : "dbdemos HLS - Patients by City in State",
+    "query" : "SELECT NVL(state, 'XX' ) state_abbr, NVL(county, 'xxx' ) county_abbr, -- NVL(city, 'xxxx' ) city_abbr, -- FIPS, ZIP,\n    count(*) as Num_Persons_count\nfrom `mmt_demos`.`hls_readmission_dbdemoinit`.patients p\nWHERE p.BIRTHDATE BETWEEN :start_date AND :end_date\nGROUP BY state_abbr, county_abbr -- city_abbr -- ZIP, FIPS, \nORDER BY 1;",
+    "parameters" : [ {
+      "displayName" : "start_date",
+      "keyword" : "start_date",
+      "dataType" : "DATE",
+      "defaultSelection" : {
+        "values" : {
+          "dataType" : "DATE",
+          "values" : [ {
+            "value" : "2018-04-01T00:00:00.000"
+          } ]
+        }
+      }
+    }, {
+      "displayName" : "end_date",
+      "keyword" : "end_date",
+      "dataType" : "DATE",
+      "defaultSelection" : {
+        "values" : {
+          "dataType" : "DATE",
+          "values" : [ {
+            "value" : "2024-04-25T00:00:00.000"
+          } ]
+        }
+      }
+    } ]
+  } ],
+  "pages" : [ {
+    "name" : "f84044e0",
+    "displayName" : "New Page",
+    "layout" : [ {
+      "widget" : {
+        "name" : "cfcf87be",
+        "textbox_spec" : "\n### Summary of Patients born between the selected timeframe for the state:"
+      },
+      "position" : {
+        "x" : 0,
+        "y" : 0,
+        "width" : 2,
+        "height" : 2
+      }
+    }, {
+      "widget" : {
+        "name" : "c8be1c43",
+        "textbox_spec" : "dbdemos dashboard. ![tracking_img](https://www.google-analytics.com/collect?v=1&gtm=GTM-NKQ8TT7&tid=UA-163989034-1&cid=555&aip=1&t=event&ec=field_demos&ea=display&dp=%2F42_field_demos%2Fhls%2Fomop%2Fpatient_dashboard&dt=DASHBOARD_OMOP_PATIENT)"
+      },
+      "position" : {
+        "x" : 0,
+        "y" : 16,
+        "width" : 6,
+        "height" : 1
+      }
+    }, {
+      "widget" : {
+        "name" : "db5c7f64",
+        "queries" : [ {
+          "name" : "main_query",
+          "query" : {
+            "datasetName" : "c53be963",
+            "fields" : [ {
+              "name" : "count(gender)",
+              "expression" : "COUNT(`gender`)"
+            }, {
+              "name" : "gender",
+              "expression" : "`gender`"
+            } ],
+            "disaggregated" : false
+          }
+        } ],
+        "spec" : {
+          "version" : 3,
+          "widgetType" : "pie",
+          "encodings" : {
+            "angle" : {
+              "fieldName" : "count(gender)",
+              "scale" : {
+                "type" : "quantitative"
+              },
+              "displayName" : "Count of gender"
+            },
+            "color" : {
+              "fieldName" : "gender",
+              "scale" : {
+                "type" : "categorical"
+              },
+              "displayName" : "gender"
+            },
+            "label" : {
+              "show" : true
+            }
+          },
+          "frame" : {
+            "title" : "Patient distribution by Gender",
+            "showTitle" : true
+          }
+        }
+      },
+      "position" : {
+        "x" : 4,
+        "y" : 1,
+        "width" : 2,
+        "height" : 7
+      }
+    }, {
+      "widget" : {
+        "name" : "5265939e",
+        "queries" : [ {
+          "name" : "main_query",
+          "query" : {
+            "datasetName" : "c53be963",
+            "fields" : [ {
+              "name" : "gender",
+              "expression" : "`gender`"
+            }, {
+              "name" : "year_of_birth",
+              "expression" : "`year_of_birth`"
+            }, {
+              "name" : "count(year_of_birth)",
+              "expression" : "COUNT(`year_of_birth`)"
+            } ],
+            "disaggregated" : false
+          }
+        } ],
+        "spec" : {
+          "version" : 3,
+          "widgetType" : "bar",
+          "encodings" : {
+            "x" : {
+              "fieldName" : "year_of_birth",
+              "scale" : {
+                "type" : "quantitative"
+              },
+              "displayName" : "year_of_birth"
+            },
+            "y" : {
+              "fieldName" : "count(year_of_birth)",
+              "scale" : {
+                "type" : "quantitative"
+              },
+              "displayName" : "Count of year_of_birth"
+            },
+            "color" : {
+              "fieldName" : "gender",
+              "scale" : {
+                "type" : "categorical"
+              },
+              "displayName" : "gender"
+            },
+            "label" : {
+              "show" : false
+            }
+          },
+          "frame" : {
+            "title" : "Patients by Year of Birth - dbdemos HLS - patient summary",
+            "showTitle" : true,
+            "showDescription" : false
+          }
+        }
+      },
+      "position" : {
+        "x" : 0,
+        "y" : 8,
+        "width" : 3,
+        "height" : 8
+      }
+    }, {
+      "widget" : {
+        "name" : "63f04fd6",
+        "queries" : [ {
+          "name" : "main_query",
+          "query" : {
+            "datasetName" : "c53be963",
+            "fields" : [ {
+              "name" : "sum(month_of_birth)",
+              "expression" : "SUM(`month_of_birth`)"
+            }, {
+              "name" : "sum(num_persons_count)",
+              "expression" : "SUM(`num_persons_count`)"
+            }, {
+              "name" : "month_of_birth",
+              "expression" : "`month_of_birth`"
+            } ],
+            "disaggregated" : false
+          }
+        } ],
+        "spec" : {
+          "version" : 3,
+          "widgetType" : "bar",
+          "encodings" : {
+            "x" : {
+              "fieldName" : "sum(num_persons_count)",
+              "scale" : {
+                "type" : "quantitative"
+              },
+              "displayName" : "Total Patients"
+            },
+            "y" : {
+              "fieldName" : "month_of_birth",
+              "scale" : {
+                "type" : "quantitative"
+              },
+              "displayName" : "month_of_birth"
+            },
+            "color" : {
+              "fieldName" : "sum(month_of_birth)",
+              "scale" : {
+                "type" : "quantitative"
+              },
+              "displayName" : "Sum of month_of_birth"
+            },
+            "label" : {
+              "show" : true
+            }
+          },
+          "format" : {
+            "timeFormat" : {
+              "formatType" : "moment",
+              "format" : "YYYY-MM-DD HH:mm"
+            }
+          },
+          "frame" : {
+            "title" : "Patients by Month of Birth",
+            "showTitle" : true,
+            "description" : "",
+            "showDescription" : true
+          },
+          "mark" : {
+            "colors" : [ "#F6C17F" ],
+            "layout" : "group"
+          }
+        }
+      },
+      "position" : {
+        "x" : 3,
+        "y" : 8,
+        "width" : 3,
+        "height" : 8
+      }
+    }, {
+      "widget" : {
+        "name" : "31010415",
+        "queries" : [ {
+          "name" : "main_query",
+          "query" : {
+            "datasetName" : "4b60505f",
+            "fields" : [ {
+              "name" : "num_persons_count",
+              "expression" : "`num_persons_count`"
+            } ],
+            "disaggregated" : true
+          }
+        } ],
+        "spec" : {
+          "version" : 2,
+          "widgetType" : "counter",
+          "encodings" : {
+            "value" : {
+              "fieldName" : "num_persons_count",
+              "rowNumber" : 1,
+              "displayName" : "num_persons_count"
+            }
+          },
+          "frame" : {
+            "title" : "Counter - dbdemos HLS - Total Patients",
+            "showTitle" : true,
+            "description" : "Total Patients",
+            "showDescription" : true
+          }
+        }
+      },
+      "position" : {
+        "x" : 0,
+        "y" : 4,
+        "width" : 2,
+        "height" : 4
+      }
+    }, {
+      "widget" : {
+        "name" : "3e3bfae5",
+        "queries" : [ {
+          "name" : "13579bf9a7a747cb867791f1be0377ed",
+          "query" : {
+            "datasetName" : "3e00a0f3",
+            "disaggregated" : true
+          }
+        }, {
+          "name" : "2b45717094b64c9a801dfa4a764b2103",
+          "query" : {
+            "datasetName" : "c53be963",
+            "disaggregated" : true
+          }
+        }, {
+          "name" : "ed68a7631a464fa58ad1d4914f56e06d",
+          "query" : {
+            "datasetName" : "4b60505f",
+            "disaggregated" : true
+          }
+        } ],
+        "spec" : {
+          "version" : 0,
+          "dashboard_parameter_spec" : {
+            "query_and_parameter_keywords" : [ {
+              "query_name" : "13579bf9a7a747cb867791f1be0377ed",
+              "keyword" : "from"
+            }, {
+              "query_name" : "2b45717094b64c9a801dfa4a764b2103",
+              "keyword" : "from"
+            }, {
+              "query_name" : "ed68a7631a464fa58ad1d4914f56e06d",
+              "keyword" : "from"
+            } ],
+            "display_name" : "from",
+            "control_type" : "DATE_PICKER"
+          }
+        }
+      },
+      "position" : {
+        "x" : 2,
+        "y" : 0,
+        "width" : 2,
+        "height" : 1
+      }
+    }, {
+      "widget" : {
+        "name" : "57be18b1",
+        "queries" : [ {
+          "name" : "parameter_dashboards/01ef8106d38f17ada7c2b4c32a460a1e/datasets/01ef8106d3931186a74f7b406fc17427_to",
+          "query" : {
+            "datasetName" : "3e00a0f3",
+            "parameters" : [ {
+              "name" : "to",
+              "keyword" : "to"
+            } ],
+            "disaggregated" : false
+          }
+        }, {
+          "name" : "parameter_dashboards/01ef8106d38f17ada7c2b4c32a460a1e/datasets/01ef8106d3961aae9879e6a730a25756_to",
+          "query" : {
+            "datasetName" : "c53be963",
+            "parameters" : [ {
+              "name" : "to",
+              "keyword" : "to"
+            } ],
+            "disaggregated" : false
+          }
+        }, {
+          "name" : "parameter_dashboards/01ef8106d38f17ada7c2b4c32a460a1e/datasets/01ef8106d39a140eb5b0a7f84683d59c_to",
+          "query" : {
+            "datasetName" : "4b60505f",
+            "parameters" : [ {
+              "name" : "to",
+              "keyword" : "to"
+            } ],
+            "disaggregated" : false
+          }
+        } ],
+        "spec" : {
+          "version" : 2,
+          "widgetType" : "filter-date-picker",
+          "encodings" : {
+            "fields" : [ {
+              "parameterName" : "to",
+              "queryName" : "parameter_dashboards/01ef8106d38f17ada7c2b4c32a460a1e/datasets/01ef8106d3931186a74f7b406fc17427_to"
+            }, {
+              "parameterName" : "to",
+              "queryName" : "parameter_dashboards/01ef8106d38f17ada7c2b4c32a460a1e/datasets/01ef8106d3961aae9879e6a730a25756_to"
+            }, {
+              "parameterName" : "to",
+              "queryName" : "parameter_dashboards/01ef8106d38f17ada7c2b4c32a460a1e/datasets/01ef8106d39a140eb5b0a7f84683d59c_to"
+            } ]
+          },
+          "frame" : {
+            "title" : "to",
+            "showTitle" : true
+          }
+        }
+      },
+      "position" : {
+        "x" : 4,
+        "y" : 0,
+        "width" : 2,
+        "height" : 1
+      }
+    }, {
+      "widget" : {
+        "name" : "70db1963",
+        "queries" : [ {
+          "name" : "main_query",
+          "query" : {
+            "datasetName" : "fc1f522a",
+            "fields" : [ {
+              "name" : "Num_Persons_count",
+              "expression" : "`Num_Persons_count`"
+            }, {
+              "name" : "county_abbr",
+              "expression" : "`county_abbr`"
+            } ],
+            "disaggregated" : true
+          }
+        } ],
+        "spec" : {
+          "version" : 3,
+          "widgetType" : "pie",
+          "encodings" : {
+            "angle" : {
+              "fieldName" : "Num_Persons_count",
+              "scale" : {
+                "type" : "quantitative"
+              },
+              "displayName" : "Num_Persons_count"
+            },
+            "color" : {
+              "fieldName" : "county_abbr",
+              "scale" : {
+                "type" : "categorical"
+              },
+              "displayName" : "county_abbr"
+            },
+            "label" : {
+              "show" : false
+            }
+          },
+          "frame" : {
+            "showTitle" : true,
+            "showDescription" : false,
+            "title" : "dbdemos HLS -- Patients by County in State"
+          }
+        }
+      },
+      "position" : {
+        "x" : 2,
+        "y" : 1,
+        "width" : 2,
+        "height" : 7
+      }
+    }, {
+      "widget" : {
+        "name" : "d0e6afec",
+        "queries" : [ {
+          "name" : "main_query",
+          "query" : {
+            "datasetName" : "3e00a0f3",
+            "fields" : [ {
+              "name" : "state_abbr",
+              "expression" : "`state_abbr`"
+            } ],
+            "disaggregated" : true
+          }
+        } ],
+        "spec" : {
+          "version" : 2,
+          "widgetType" : "counter",
+          "encodings" : {
+            "value" : {
+              "fieldName" : "state_abbr",
+              "displayName" : "state_abbr"
+            }
+          }
+        }
+      },
+      "position" : {
+        "x" : 0,
+        "y" : 2,
+        "width" : 2,
+        "height" : 2
+      }
+    } ]
+  } ]
+}

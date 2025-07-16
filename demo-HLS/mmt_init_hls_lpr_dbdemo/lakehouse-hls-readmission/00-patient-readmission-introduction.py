@@ -182,7 +182,7 @@
 # MAGIC ---   
 # MAGIC
 # MAGIC * [04.4a-Model-Serving-with-InferenceTable-patient-readmission]($./04-Data-Science-ML/04.4a-Model-Serving-with-InferenceTable-patient-readmission): leverage Databricks Serverless model serving to deploy instant risk evaluation and personalization.
-# MAGIC * [0.4.4x-Online Inferencing + Monitoring]($./04-Data-Science-ML/04.4x-Inference-Table-Monitor_main [v2]): Monitoring Online Inferencing and tracking model performance.
+# MAGIC * [0.4.4x-Online Inferencing + Monitoring]($./04-Data-Science-ML/04.4x-Inference-Table-Monitor_main_[v3]): Monitoring Online Inferencing and tracking model performance.
 # MAGIC
 # MAGIC ---   
 # MAGIC Extra: 

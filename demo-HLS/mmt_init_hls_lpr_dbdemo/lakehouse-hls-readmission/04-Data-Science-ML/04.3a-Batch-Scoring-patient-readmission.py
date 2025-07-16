@@ -15,7 +15,10 @@
 # MAGIC
 # MAGIC
 # MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
-# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&org_id=1444828305810485&notebook=%2F04-Data-Science-ML%2F04.3-Batch-Scoring-patient-readmission&demo_name=lakehouse-hls-readmission&event=VIEW&path=%2F_dbdemos%2Flakehouse%2Flakehouse-hls-readmission%2F04-Data-Science-ML%2F04.3-Batch-Scoring-patient-readmission&version=1">
+# MAGIC <!-- <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&org_id=1444828305810485&notebook=%2F04-Data-Science-ML%2F04.3-Batch-Scoring-patient-readmission&demo_name=lakehouse-hls-readmission&event=VIEW&path=%2F_dbdemos%2Flakehouse%2Flakehouse-hls-readmission%2F04-Data-Science-ML%2F04.3-Batch-Scoring-patient-readmission&version=1"> -->
+# MAGIC
+# MAGIC <!-- Collect usage data (view). Remove it to disable collection. View README for more details.  -->
+# MAGIC <img width="1px" src="https://ppxrzfxige.execute-api.us-west-2.amazonaws.com/v1/analytics?category=lakehouse&org_id=1444828305810485&notebook=%2F04-Data-Science-ML%2F04.3a-Batch-Scoring-patient-readmission&demo_name=lakehouse-hls-readmission&event=VIEW&path=%2F_dbdemos%2Flakehouse%2Flakehouse-hls-readmission%2F04-Data-Science-ML%2F04.3a-Batch-Scoring-patient-readmission&version=1">
 
 # COMMAND ----------
 
@@ -43,14 +46,10 @@
 mlflow.set_registry_uri('databricks-uc')
 
 model_name = "dbdemos_hls_pr"
-model_alias = "prod"
+model_alias = "champion"
 
 # Load model as a Spark UDF.
 loaded_model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.{model_name}@{model_alias}", result_type='double')
-
-# COMMAND ----------
-
-# loaded_model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}.dbdemos_hls_patient_readmission@prod", result_type='double')
 
 # COMMAND ----------
 
@@ -58,9 +57,9 @@ loaded_model = mlflow.pyfunc.spark_udf(spark, model_uri=f"models:/{catalog}.{db}
 client = mlflow.MlflowClient()
 
 # get a model version by alias
-model_latest_version = client.get_model_version_by_alias(f"{catalog}.{db}.{model_name}", "prod").version  ##champion 
+model_latest_version = client.get_model_version_by_alias(f"{catalog}.{db}.{model_name}", model_alias).version  ##champion 
 
-# model_alias = "prod"
+# model_alias = "champion"
 f"{catalog}.{db}.{model_name}@{model_alias}|{model_latest_version}"
 
 # COMMAND ----------
@@ -100,7 +99,7 @@ patient_risk_df.count()
 
 # f"{catalog}.{db}.patient_readmission_prediction"
 
-spark.sql(f"""DROP TABLE IF EXISTS `{catalog}.{db}.patient_readmission_prediction`;""")
+# spark.sql(f"""DROP TABLE IF EXISTS `{catalog}.{db}.patient_readmission_prediction`;""")
 
 # COMMAND ----------
 
